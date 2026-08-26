@@ -1,0 +1,9 @@
+dependencies {
+    implementation project(':excel-library')
+}
+
+bootJar {
+    enabled = true
+    archiveBaseName = 'cyclic-action'
+    archiveVersion = '0.0.1-SNAPSHOT'
+}

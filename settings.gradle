@@ -1,0 +1,8 @@
+rootProject.name = 'batch-framework'
+
+include 'turnover-plan'
+include 'cyclic-action'
+include 'excel-library'
+include 'avg-check-plan'
+include 'sales-plan'
+include 'store-plan-adjustment'

@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: store-plan-adjustment
+  datasource:
+    url: jdbc:sqlserver://10.2.0.21\VAKA-ANALYTICS:1433;database=e_take;trustServerCertificate=true
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+system-configuration:
+  date-range:
+    from-date: ${START_DATE}
+    to-date: ${END_DATE}
+  resources:
+    input: src/main/resources/input/store_plan_adjustments.xlsx
+    output: src/main/resources/output/adjusted-plans.xlsx
+  input-columns:
+    STORE: 0
+    DATE: 1
+    TIME_RANGES: 2

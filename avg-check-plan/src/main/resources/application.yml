@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: avg-check-plan
+  datasource:
+    url: jdbc:sqlserver://10.2.0.21\VAKA-ANALYTICS:1433;database=e_take;trustServerCertificate=true
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+system-configuration:
+  forecast-strategy: PLANED_MONTH
+  date-range:
+    from-date: ${START_DATE}
+    to-date: ${END_DATE}
+  seasonal-coefficient:
+    divergence-threshold: 0.05
+    recent-year-weight: 0.6
+    growth: 0.02
+  adjustment:
+    smoothingFactor: 0.98
+    strength-factor: 0.7
+    min-limit: 1.0
+    max-limit: 0.1
+    growth: 0.07
+#    growth: 0.00
+  output: output/План СЧ.xlsx
+  columns:
+    REGION: 0
+    STORE: 1
+    SIMILAR_STORE: 2
+    PREV_AVG_CHECK_TO_DATE: 3
+    PREV_AVG_CHECK_LAST_DAY: 4
+    DYNAMIC: 5
+    AVG_CHECK_TO_DATE: 6
+    FORECAST: 7
+    CURRENT_AVG_CHECK: 8
+    FULFILMENT: 9
+    ADJUSTED_FORECAST: 10
+    ADJUSTED_FULFILMENT: 11

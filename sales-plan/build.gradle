@@ -1,0 +1,5 @@
+bootJar {
+    enabled = true
+    archiveBaseName = 'sales-plan'
+    archiveVersion = '0.0.1-SNAPSHOT'
+}

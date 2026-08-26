@@ -1,0 +1,71 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+system-configuration:
+  planned-year: ${PLANNED_YEAR}
+  planned-month: ${PLANNED_MONTH}
+  exclusion-dates:
+#    - 2025-05-01
+#    - 2025-05-02
+#    - 2025-05-03
+#    - 2025-05-04
+#    - 2025-05-05
+  output: output/
+  column-indices:
+    data-sheet:
+      store: 0
+      similar-store: 1
+      category: 2
+      avg-turnover-prev-period-actual-month: 3
+      avg-margin-prev-period-actual-month: 4
+      avg-turnover-prev-period-first-month: 5
+      avg-margin-prev-period-first-month: 6
+      avg-turnover-prev-period-second-month: 7
+      avg-margin-prev-period-second-month: 8
+      avg-turnover-prev-period-third-month: 9
+      avg-margin-prev-period-third-month: 10
+      avg-turnover-current-period-actual-month: 11
+      avg-margin-current-period-actual-month: 12
+      dyn-turnover-first-to-actual-month: 13
+      dyn-margin-first-to-actual-month: 14
+      dyn-turnover-second-to-first-month: 15
+      dyn-margin-second-to-first-month: 16
+      dyn-turnover-third-to-second-month: 17
+      dyn-margin-third-to-second-month: 18
+      plan-avg-turnover-first-month: 19
+      plan-avg-margin-first-month: 20
+      plan-avg-turnover-second-month: 21
+      plan-avg-margin-second-month: 22
+      plan-avg-turnover-third-month: 23
+      plan-avg-margin-third-month: 24
+      days-first-month: 25
+      days-second-month: 26
+      days-third-month: 27
+      plan-turnover-first-month: 28
+      plan-margin-first-month: 29
+      plan-turnover-second-month: 30
+      plan-margin-second-month: 31
+      plan-turnover-third-month: 32
+      plan-margin-third-month: 33
+    categories-sheet:
+      category: 0
+      plan-turnover-first-month: 1
+      plan-margin-first-month: 2
+      plan-turnover-second-month: 3
+      plan-margin-second-month: 4
+      plan-turnover-third-month: 5
+      plan-margin-third-month: 6
+    stores-sheet:
+      store: 0
+      plan-turnover-first-month: 1
+      plan-margin-first-month: 2
+      plan-turnover-second-month: 3
+      plan-margin-second-month: 4
+      plan-turnover-third-month: 5
+      plan-margin-third-month: 6
+      adjusted-plan-turnover-first-month: 7
+      adjusted-plan-margin-first-month: 8

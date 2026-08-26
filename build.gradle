@@ -1,0 +1,44 @@
+plugins {
+    id 'java'
+    alias(libs.plugins.spring.boot) apply false
+    alias(libs.plugins.spring.dependency.management) apply false
+}
+
+allprojects {
+    group = 'com.etake'
+    version = '0.0.1-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(libs.versions.java.get() as int)
+        }
+    }
+
+    dependencies {
+        implementation libs.spring.boot.starter.batch
+        implementation libs.spring.boot.starter.jdbc
+        implementation libs.spring.batch.excel
+        implementation libs.spring.boot.starter.json
+        implementation libs.poi.ooxml
+        implementation libs.xerces.impl
+        implementation libs.sax
+        compileOnly libs.lombok
+        runtimeOnly libs.mssql.jdbc
+        testImplementation libs.spring.boot.starter.test
+        annotationProcessor libs.lombok
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+}

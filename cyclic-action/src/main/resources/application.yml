@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: cyclic-action
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+  datasource:
+    url: jdbc:sqlserver://10.2.0.21\VAKA-ANALYTICS:1433;database=e_take;trustServerCertificate=true
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+excel-management:
+  skip-lines:
+    action-history: 5
+    actual-avg-sales: 6
+  header-row-index:
+    action-history: 4
+    actual-avg-sales: 5
+  input:
+    action-history: input/Акційна історія.xlsx
+    actual-avg-sales: input/Актуальні СДП.xlsx
+  output:
+    action-history: output/
+
+cyclic-action:
+  start-date: ${START_DATE}
+  end-date: ${END_DATE}

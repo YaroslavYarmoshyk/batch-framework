@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  threads:
+    virtual:
+      enabled: true
+
+
+system-configurations:
+  year-month:
+    year: ${YEAR}
+    month: ${MONTH}
+  distribution:
+    enabled: ${ENABLED_DISTRIBUTION}
+    max-iterations: 200
+    epsilon: 0.0000000000000001
+  new-store:
+    achievement-target: 0.95
+  output: output/
+  upload-plans: ${UPLOAD_PLANS}
+  create-report: ${CREATE_REPORT}

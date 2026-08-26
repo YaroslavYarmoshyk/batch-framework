@@ -1,0 +1,14 @@
+package com.etake.salesplan;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+
+@SpringBootApplication
+@ConfigurationPropertiesScan
+public class SalesPlanApplication {
+
+    static void main(String[] args) {
+        SpringApplication.run(SalesPlanApplication.class, args);
+    }
+}

@@ -1,0 +1,26 @@
+[versions]
+java = "25"
+spring-boot = "3.5.11"
+spring-dependency-management = "1.1.7"
+spring-batch-excel = "0.2.0"
+poi = "5.4.1"
+xerces = "2.12.2"
+sax = "2.0.1"
+lombok = "1.18.42"
+mssql-jdbc = "12.8.0.jre11"
+
+[libraries]
+spring-boot-starter-batch = { module = "org.springframework.boot:spring-boot-starter-batch" }
+spring-boot-starter-jdbc = { module = "org.springframework.boot:spring-boot-starter-jdbc" }
+spring-boot-starter-json = { module = "org.springframework.boot:spring-boot-starter-json" }
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+spring-batch-excel = { module = "org.springframework.batch.extensions:spring-batch-excel", version.ref = "spring-batch-excel" }
+poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "poi" }
+xerces-impl = { module = "xerces:xercesImpl", version.ref = "xerces" }
+sax = { module = "sax:sax", version.ref = "sax" }
+lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+mssql-jdbc = { module = "com.microsoft.sqlserver:mssql-jdbc", version.ref = "mssql-jdbc" }
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }

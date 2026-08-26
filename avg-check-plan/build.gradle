@@ -1,0 +1,9 @@
+repositories {
+    mavenCentral()
+}
+
+bootJar {
+    enabled = true
+    archiveBaseName = 'avg-check-plan'
+    archiveVersion = '0.0.1-SNAPSHOT'
+}

@@ -1,0 +1,9 @@
+repositories {
+    mavenCentral()
+}
+
+bootJar {
+    enabled = true
+    archiveBaseName = 'store-plan-adjustment'
+    archiveVersion = '0.0.1-SNAPSHOT'
+}
