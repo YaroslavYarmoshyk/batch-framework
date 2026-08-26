@@ -41,7 +41,9 @@ bin/
 .claude/settings.local.json
 
 ### Business data — inputs/outputs are local working files, not source ###
-**/src/main/resources/input/*.xlsx
-**/src/main/resources/output/*.xlsx
+**/src/main/resources/input/*
+!**/src/main/resources/input/README.md
+**/src/main/resources/output/*
+!**/src/main/resources/output/README.md
 **/plans/*.xlsx
 **/holidays/*.xlsx
