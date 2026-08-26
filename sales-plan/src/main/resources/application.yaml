@@ -17,6 +17,6 @@ system-configurations:
     epsilon: 0.0000000000000001
   new-store:
     achievement-target: 0.95
-  output: output/
+  output: src/main/resources/output/
   upload-plans: ${UPLOAD_PLANS}
   create-report: ${CREATE_REPORT}
