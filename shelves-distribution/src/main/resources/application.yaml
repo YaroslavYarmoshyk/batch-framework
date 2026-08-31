@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  threads:
+    virtual:
+      enabled: true
+
+features:
+  distribution:
+    grouped-by-store: ${GROUPED_BY_STORE}
+    granularity: ${GRANULARITY}
+    region:
+    stores:
+      - ${STORES}
+
+system-configurations:
+  output: src/main/resources/output/

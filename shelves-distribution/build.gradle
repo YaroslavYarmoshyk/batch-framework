@@ -1,0 +1,9 @@
+dependencies {
+    implementation project(':excel-library')
+}
+
+bootJar {
+    enabled = true
+    archiveBaseName = 'shelves-distribution'
+    archiveVersion = '0.0.1-SNAPSHOT'
+}
