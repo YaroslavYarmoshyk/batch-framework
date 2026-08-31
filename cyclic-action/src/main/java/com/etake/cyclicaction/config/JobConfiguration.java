@@ -8,15 +8,15 @@ import com.etake.cyclicaction.config.processor.CyclicActionItemProcessor;
 import com.etake.cyclicaction.config.writer.ExcelPoiItemWriter;
 import com.etake.cyclicaction.model.Position;
 import com.etake.cyclicaction.model.SalesPeriod;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
+import org.springframework.batch.core.job.Job;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.job.parameters.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.ItemReader;
-import org.springframework.batch.item.ItemStreamReader;
-import org.springframework.batch.item.ItemStreamWriter;
+import org.springframework.batch.infrastructure.item.ItemReader;
+import org.springframework.batch.infrastructure.item.ItemStreamReader;
+import org.springframework.batch.infrastructure.item.ItemStreamWriter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -74,7 +74,8 @@ public class JobConfiguration {
     public Step firstStep() {
         return new StepBuilder("actionHistoryStep", jobRepository)
                 .allowStartIfComplete(true)
-                .<Position, Position>chunk(10000, transactionManager)
+                .<Position, Position>chunk(10000)
+                .transactionManager(transactionManager)
                 .reader(actionHistoryReader)
                 .processor(actionHistoryItemProcessor)
                 .writer(actionHistoryWriter)
@@ -85,7 +86,8 @@ public class JobConfiguration {
     public Step secondStep() {
         return new StepBuilder("actualSalesStep", jobRepository)
                 .allowStartIfComplete(true)
-                .<SalesPeriod, SalesPeriod>chunk(10000, transactionManager)
+                .<SalesPeriod, SalesPeriod>chunk(10000)
+                .transactionManager(transactionManager)
                 .reader(actualAvgSalesReader)
                 .processor(actualAvgSalesProcessor)
                 .writer(actualAvgSalesWriter)
@@ -96,7 +98,8 @@ public class JobConfiguration {
     public Step thirdStep() {
         return new StepBuilder("forecastStep", jobRepository)
                 .allowStartIfComplete(true)
-                .<Position, Position>chunk(5000, transactionManager)
+                .<Position, Position>chunk(5000)
+                .transactionManager(transactionManager)
                 .reader(cyclicActionListReader)
                 .processor(cyclicActionItemProcessor)
                 .writer(cyclicActionItemWriter)

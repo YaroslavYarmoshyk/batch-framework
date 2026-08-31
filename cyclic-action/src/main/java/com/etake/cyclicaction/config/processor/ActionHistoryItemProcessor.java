@@ -4,7 +4,7 @@ import com.etake.cyclicaction.dao.InMemoryStore;
 import com.etake.cyclicaction.enumeration.ActionType;
 import com.etake.cyclicaction.model.Position;
 import lombok.NonNull;
-import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.annotation.DateTimeFormat;

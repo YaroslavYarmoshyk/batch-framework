@@ -12,14 +12,17 @@ import java.security.CodeSource;
  * work regardless of the JVM's working directory.
  *
  * <p>A configured path is used verbatim when absolute. When relative it is resolved against, in
- * order: (1) the current working directory if the file already exists there, then (2) the module
- * directory — the nearest ancestor of the running classes/jar that contains a {@code build.gradle}.
- * If neither yields an existing file (e.g. an output directory that is about to be created) the
- * module-relative location is preferred, falling back to the working-directory location when the
- * module cannot be determined.
+ * order: (1) the current working directory if the file already exists there, then (2)
+ * {@code src/main/resources} under the module directory — the nearest ancestor of the running
+ * classes/jar that contains a {@code build.gradle}, matching where input/output files are kept on
+ * disk (see {@code .gitignore}). If neither yields an existing file (e.g. an output directory that
+ * is about to be created) the resources-relative location is preferred, falling back to the
+ * working-directory location when the module cannot be determined.
  */
 @Slf4j
 public final class ResourcePaths {
+
+    private static final String RESOURCES_DIR = "src/main/resources";
 
     private ResourcePaths() {
     }
@@ -40,7 +43,7 @@ public final class ResourcePaths {
 
         final File moduleRoot = moduleRoot();
         if (moduleRoot != null) {
-            return new File(moduleRoot, configured);
+            return new File(new File(moduleRoot, RESOURCES_DIR), configured);
         }
         return workingDirBased;
     }

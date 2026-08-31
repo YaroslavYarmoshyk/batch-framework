@@ -5,11 +5,11 @@ import com.etake.avgcheckplan.service.PlanedMonthAvgCheckForecastService;
 import com.etake.avgcheckplan.service.SeasonalCoefficientAvgCheckForecastService;
 import com.etake.avgcheckplan.service.ExcelService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.batch.core.StepContribution;
+import org.springframework.batch.core.step.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.repeat.RepeatStatus;
-import org.springframework.lang.NonNull;
+import org.springframework.batch.infrastructure.repeat.RepeatStatus;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 
 @Component

@@ -3,10 +3,10 @@ package com.etake.cyclicaction.config.writer;
 import com.etake.cyclicaction.dao.InMemoryStore;
 import com.etake.cyclicaction.model.Position;
 import lombok.NonNull;
-import org.springframework.batch.item.Chunk;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamWriter;
+import org.springframework.batch.infrastructure.item.Chunk;
+import org.springframework.batch.infrastructure.item.ExecutionContext;
+import org.springframework.batch.infrastructure.item.ItemStreamException;
+import org.springframework.batch.infrastructure.item.ItemStreamWriter;
 import org.springframework.stereotype.Component;
 
 @Component

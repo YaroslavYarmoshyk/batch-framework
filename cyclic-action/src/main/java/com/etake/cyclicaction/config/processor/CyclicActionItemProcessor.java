@@ -9,7 +9,7 @@ import com.etake.cyclicaction.service.AverageSalesService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.math3.util.Pair;
-import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;

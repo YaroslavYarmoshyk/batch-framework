@@ -1,8 +1,8 @@
 [versions]
 java = "25"
-spring-boot = "3.5.11"
+spring-boot = "4.1.1"
 spring-dependency-management = "1.1.7"
-spring-batch-excel = "0.2.0"
+spring-batch-excel = "0.3.0"
 poi = "5.4.1"
 xerces = "2.12.2"
 sax = "2.0.1"

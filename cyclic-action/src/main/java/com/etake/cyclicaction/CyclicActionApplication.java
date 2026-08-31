@@ -1,22 +1,15 @@
 package com.etake.cyclicaction;
 
 import com.excel.custom.library.annotation.EnableExcelLibrary;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
-import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.job.Job;
+import org.springframework.batch.core.job.parameters.JobParameters;
+import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
-
 @SpringBootApplication
-@EnableBatchProcessing
 @EnableExcelLibrary
 public class CyclicActionApplication {
 
@@ -25,11 +18,7 @@ public class CyclicActionApplication {
     }
 
     @Bean
-    ApplicationRunner runner(JobLauncher jobLauncher, Job job) {
-        final Date currentDate = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
-        final JobParameters jobParameters = new JobParametersBuilder()
-                .addDate("currentDate", currentDate)
-                .toJobParameters();
-        return _ -> jobLauncher.run(job, jobParameters);
+    ApplicationRunner runner(JobOperator jobOperator, Job job) {
+        return _ -> jobOperator.start(job, new JobParameters());
     }
 }

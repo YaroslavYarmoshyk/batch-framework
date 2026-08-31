@@ -1,6 +1,6 @@
 package com.etake.shelvesdistribution.model;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.math.BigDecimal;
 import java.util.Comparator;

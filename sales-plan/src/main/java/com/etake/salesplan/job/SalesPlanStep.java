@@ -3,8 +3,8 @@ package com.etake.salesplan.job;
 import com.etake.salesplan.service.StoreCategorySalesService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.batch.core.Step;
-import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.step.Step;
+import org.springframework.batch.core.step.StepExecution;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;

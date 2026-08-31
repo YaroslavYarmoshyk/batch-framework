@@ -2,9 +2,9 @@ package com.etake.shelvesdistribution.config;
 
 import com.etake.shelvesdistribution.service.ShelvesDistributionService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.batch.core.Step;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.lang.NonNull;
+import org.springframework.batch.core.step.Step;
+import org.springframework.batch.core.step.StepExecution;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -14,9 +14,8 @@ import java.io.IOException;
 public class ShelvesDistributionStep implements Step {
     private final ShelvesDistributionService shelvesDistributionService;
 
-    @NonNull
     @Override
-    public String getName() {
+    public @NonNull String getName() {
         return "shelvesDistributionStep";
     }
 

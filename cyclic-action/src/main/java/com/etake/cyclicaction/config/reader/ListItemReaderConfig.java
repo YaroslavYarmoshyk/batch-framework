@@ -4,7 +4,7 @@ import com.etake.cyclicaction.dao.InMemoryStore;
 import com.etake.cyclicaction.model.Position;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 
-import org.springframework.batch.item.support.ListItemReader;
+import org.springframework.batch.infrastructure.item.support.ListItemReader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
