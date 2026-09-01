@@ -17,3 +17,4 @@ system-configuration:
     STORE: 0
     DATE: 1
     TIME_RANGES: 2
+    AMOUNT: 3

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -27,7 +28,9 @@ import java.util.TreeSet;
 
 /**
  * Reads {@code store_plan_adjustments.xlsx} and returns one {@link AdjustmentRequest} per
- * (store, date), with the time ranges of all matching rows unioned into a single slot set.
+ * (store, date). Rows for the same (store, date) are merged: rows with no {@code amount} union
+ * their time ranges into {@code algorithmSlots}; rows that do carry an {@code amount} skip the
+ * algorithm entirely and have their amounts summed instead.
  */
 @Slf4j
 @Service
@@ -43,9 +46,10 @@ public class AdjustmentFileService {
         final int storeColumn = columns.get(InputColumn.STORE);
         final int dateColumn = columns.get(InputColumn.DATE);
         final int timeRangesColumn = columns.get(InputColumn.TIME_RANGES);
+        final Integer amountColumn = columns.get(InputColumn.AMOUNT);
 
         // Keyed by store+date so repeated rows merge; LinkedHashMap keeps the file order.
-        final Map<StoreDate, Set<LocalTime>> merged = new LinkedHashMap<>();
+        final Map<StoreDate, Accumulator> merged = new LinkedHashMap<>();
 
         try (InputStream in = new FileInputStream(ResourcePaths.resolve(properties.resources().input()));
              Workbook workbook = WorkbookFactory.create(in)) {
@@ -75,8 +79,16 @@ public class AdjustmentFileService {
                     continue;
                 }
 
-                merged.computeIfAbsent(new StoreDate(storeName, date), k -> new TreeSet<>())
-                        .addAll(slots);
+                final BigDecimal amount = amountColumn == null
+                        ? null
+                        : readAmount(row.getCell(amountColumn), r);
+
+                final Accumulator accumulator = merged.computeIfAbsent(new StoreDate(storeName, date), _ -> new Accumulator());
+                if (amount != null) {
+                    accumulator.amount = accumulator.amount == null ? amount : accumulator.amount.add(amount);
+                } else {
+                    accumulator.algorithmSlots.addAll(slots);
+                }
             }
         } catch (final Exception e) {
             throw new IllegalStateException("Failed to read adjustments file: "
@@ -84,7 +96,8 @@ public class AdjustmentFileService {
         }
 
         final List<AdjustmentRequest> requests = merged.entrySet().stream()
-                .map(e -> new AdjustmentRequest(e.getKey().storeName(), e.getKey().date(), e.getValue()))
+                .map(e -> new AdjustmentRequest(e.getKey().storeName(), e.getKey().date(),
+                        e.getValue().algorithmSlots, e.getValue().amount))
                 .toList();
         log.info("Read {} store/date adjustment(s) from {}", requests.size(), properties.resources().input());
         return requests;
@@ -117,6 +130,30 @@ public class AdjustmentFileService {
         }
     }
 
+    private BigDecimal readAmount(final Cell cell, final int rowIndex) {
+        if (cell == null) {
+            return null;
+        }
+        try {
+            return switch (cell.getCellType()) {
+                case NUMERIC -> BigDecimal.valueOf(cell.getNumericCellValue());
+                case STRING -> {
+                    final String text = cell.getStringCellValue().trim();
+                    yield text.isBlank() ? null : new BigDecimal(text);
+                }
+                default -> null;
+            };
+        } catch (final NumberFormatException e) {
+            log.warn("Row {}: unparseable amount '{}', falling back to the algorithm for this row", rowIndex + 1, readString(cell));
+            return null;
+        }
+    }
+
     private record StoreDate(String storeName, LocalDate date) {
+    }
+
+    private static final class Accumulator {
+        private final Set<LocalTime> algorithmSlots = new TreeSet<>();
+        private BigDecimal amount;
     }
 }

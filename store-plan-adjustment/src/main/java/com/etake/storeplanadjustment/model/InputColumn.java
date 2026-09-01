@@ -7,5 +7,6 @@ package com.etake.storeplanadjustment.model;
 public enum InputColumn {
     STORE,
     DATE,
-    TIME_RANGES
+    TIME_RANGES,
+    AMOUNT
 }
