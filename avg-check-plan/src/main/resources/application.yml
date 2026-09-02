@@ -7,7 +7,7 @@ spring:
     password: ${DB_PASSWORD}
 
 system-configuration:
-  forecast-strategy: PLANED_MONTH
+  forecast-strategy: SEASONAL_COEFFICIENT
   date-range:
     from-date: ${START_DATE}
     to-date: ${END_DATE}
@@ -22,7 +22,9 @@ system-configuration:
     max-limit: 0.1
     growth: 0.07
 #    growth: 0.00
-  output: output/План СЧ.xlsx
+  output: src/main/resources/output/План СЧ.xlsx
+  input: src/main/resources/input/avg_items_per_check_plan.xlsx
+  upload-to-db: ${UPLOAD_TO_DB:false}
   columns:
     REGION: 0
     STORE: 1

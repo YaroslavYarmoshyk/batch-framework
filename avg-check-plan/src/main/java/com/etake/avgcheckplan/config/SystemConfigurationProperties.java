@@ -19,6 +19,7 @@ public record SystemConfigurationProperties(
         @DefaultValue("PLANED_MONTH")
         ForecastStrategy forecastStrategy,
         String output,
+        String input,
         Map<Column, Integer> columns
 ) {
 }

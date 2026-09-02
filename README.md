@@ -72,6 +72,7 @@ before running. Variables in use across modules:
 | `DB_URL`               | `sales-plan`, `turnover-plan`                                   |
 | `DB_USERNAME`, `DB_PASSWORD` | `cyclic-action`, `avg-check-plan`, `store-plan-adjustment`, `turnover-plan` |
 | `START_DATE`, `END_DATE`     | `cyclic-action`, `avg-check-plan`, `store-plan-adjustment`  |
+| `UPLOAD_TO_DB`         | `avg-check-plan` (optional, defaults to `false`)                 |
 | `YEAR`, `MONTH`, `ENABLED_DISTRIBUTION`, `UPLOAD_PLANS`, `CREATE_REPORT` | `sales-plan` |
 | `PLANNED_YEAR`, `PLANNED_MONTH` | `turnover-plan`                                             |
 
