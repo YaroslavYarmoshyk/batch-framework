@@ -10,10 +10,9 @@ lombok = "1.18.42"
 mssql-jdbc = "12.8.0.jre11"
 
 [libraries]
-spring-boot-starter-batch = { module = "org.springframework.boot:spring-boot-starter-batch" }
+spring-boot-starter-batch-jdbc = { module = "org.springframework.boot:spring-boot-starter-batch-jdbc" }
 spring-boot-starter-jdbc = { module = "org.springframework.boot:spring-boot-starter-jdbc" }
 spring-boot-starter-json = { module = "org.springframework.boot:spring-boot-starter-json" }
-spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
 spring-batch-excel = { module = "org.springframework.batch.extensions:spring-batch-excel", version.ref = "spring-batch-excel" }
 poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "poi" }
 xerces-impl = { module = "xerces:xercesImpl", version.ref = "xerces" }

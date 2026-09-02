@@ -2,6 +2,8 @@ package com.etake.cyclicaction.config;
 
 import com.etake.cyclicaction.config.annotations.ActionHistoryReader;
 import com.etake.cyclicaction.config.annotations.ActualAvgSalesReader;
+import com.etake.cyclicaction.config.listener.JobDiagnosticsListener;
+import com.etake.cyclicaction.config.listener.StepDiagnosticsListener;
 import com.etake.cyclicaction.config.processor.ActionHistoryItemProcessor;
 import com.etake.cyclicaction.config.processor.ActualAvgSalesProcessor;
 import com.etake.cyclicaction.config.processor.CyclicActionItemProcessor;
@@ -34,6 +36,8 @@ public class JobConfiguration {
     private final CyclicActionItemProcessor cyclicActionItemProcessor;
     private final ActionHistoryItemProcessor actionHistoryItemProcessor;
     private final ActualAvgSalesProcessor actualAvgSalesProcessor;
+    private final JobDiagnosticsListener jobDiagnosticsListener;
+    private final StepDiagnosticsListener stepDiagnosticsListener;
 
     public JobConfiguration(final JobRepository jobRepository,
                             final PlatformTransactionManager transactionManager,
@@ -45,7 +49,9 @@ public class JobConfiguration {
                             final ExcelPoiItemWriter cyclicActionItemWriter,
                             final CyclicActionItemProcessor cyclicActionItemProcessor,
                             final ActionHistoryItemProcessor actionHistoryItemProcessor,
-                            final ActualAvgSalesProcessor actualAvgSalesProcessor) {
+                            final ActualAvgSalesProcessor actualAvgSalesProcessor,
+                            final JobDiagnosticsListener jobDiagnosticsListener,
+                            final StepDiagnosticsListener stepDiagnosticsListener) {
         this.jobRepository = jobRepository;
         this.transactionManager = transactionManager;
         this.actionHistoryReader = actionHistoryReader;
@@ -57,13 +63,15 @@ public class JobConfiguration {
         this.cyclicActionItemProcessor = cyclicActionItemProcessor;
         this.actionHistoryItemProcessor = actionHistoryItemProcessor;
         this.actualAvgSalesProcessor = actualAvgSalesProcessor;
+        this.jobDiagnosticsListener = jobDiagnosticsListener;
+        this.stepDiagnosticsListener = stepDiagnosticsListener;
     }
 
     @Bean
     public Job job() {
         return new JobBuilder("firstJob", jobRepository)
-                .preventRestart()
                 .incrementer(new RunIdIncrementer())
+                .listener(jobDiagnosticsListener)
                 .start(firstStep())
                 .next(secondStep())
                 .next(thirdStep())
@@ -79,6 +87,7 @@ public class JobConfiguration {
                 .reader(actionHistoryReader)
                 .processor(actionHistoryItemProcessor)
                 .writer(actionHistoryWriter)
+                .listener(stepDiagnosticsListener)
                 .build();
     }
 
@@ -91,6 +100,7 @@ public class JobConfiguration {
                 .reader(actualAvgSalesReader)
                 .processor(actualAvgSalesProcessor)
                 .writer(actualAvgSalesWriter)
+                .listener(stepDiagnosticsListener)
                 .build();
     }
 
@@ -103,6 +113,7 @@ public class JobConfiguration {
                 .reader(cyclicActionListReader)
                 .processor(cyclicActionItemProcessor)
                 .writer(cyclicActionItemWriter)
+                .listener(stepDiagnosticsListener)
                 .build();
     }
 }

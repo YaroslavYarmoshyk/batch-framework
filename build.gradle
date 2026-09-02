@@ -25,7 +25,7 @@ subprojects {
     }
 
     dependencies {
-        implementation libs.spring.boot.starter.batch
+        implementation libs.spring.boot.starter.batch.jdbc
         implementation libs.spring.boot.starter.jdbc
         implementation libs.spring.batch.excel
         implementation libs.spring.boot.starter.json
@@ -34,7 +34,6 @@ subprojects {
         implementation libs.sax
         compileOnly libs.lombok
         runtimeOnly libs.mssql.jdbc
-        testImplementation libs.spring.boot.starter.test
         annotationProcessor libs.lombok
     }
 
