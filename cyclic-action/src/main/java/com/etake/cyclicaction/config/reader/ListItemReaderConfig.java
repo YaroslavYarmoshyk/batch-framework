@@ -1,6 +1,6 @@
 package com.etake.cyclicaction.config.reader;
 
-import com.etake.cyclicaction.dao.InMemoryStore;
+import com.etake.cyclicaction.dao.CyclicActionState;
 import com.etake.cyclicaction.model.Position;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 
@@ -13,7 +13,7 @@ public class ListItemReaderConfig {
 
     @Bean
     @StepScope
-    public ListItemReader<Position> cyclicActionListReader() {
-        return new ListItemReader<>(InMemoryStore.cyclicAction);
+    public ListItemReader<Position> cyclicActionListReader(final CyclicActionState cyclicActionState) {
+        return new ListItemReader<>(cyclicActionState.getCyclicAction());
     }
 }

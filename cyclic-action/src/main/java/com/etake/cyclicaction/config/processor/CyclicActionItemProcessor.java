@@ -1,6 +1,8 @@
 package com.etake.cyclicaction.config.processor;
 
-import com.etake.cyclicaction.dao.InMemoryStore;
+import com.etake.cyclicaction.dao.ActionHistoryIndex;
+import com.etake.cyclicaction.dao.CyclicActionState;
+import com.etake.cyclicaction.dao.StoreActionCodeKey;
 import com.etake.cyclicaction.enumeration.Algorithm;
 import com.etake.cyclicaction.model.Position;
 import com.etake.cyclicaction.model.SalesPeriod;
@@ -14,10 +16,11 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
-import static com.etake.cyclicaction.dao.InMemoryStore.actualAvgSales;
 import static com.etake.cyclicaction.util.Constants.DEFAULT_AVERAGE_SALES_SCALE;
 import static com.etake.cyclicaction.util.Constants.DEFAULT_ROUNDING_MODE;
 
@@ -26,16 +29,18 @@ import static com.etake.cyclicaction.util.Constants.DEFAULT_ROUNDING_MODE;
 public class CyclicActionItemProcessor implements ItemProcessor<Position, Position> {
     private final AlgorithmService algorithmService;
     private final AverageSalesService averageSalesService;
+    private final CyclicActionState cyclicActionState;
 
     @Override
     public Position process(@NonNull final Position position) {
-        final Pair<Algorithm, List<Position>> posAlgPair = algorithmService.definePositionsByAlgorithm(position, InMemoryStore.actionHistory);
+        final ActionHistoryIndex historyIndex = cyclicActionState.getHistoryIndex();
+        final Pair<Algorithm, List<Position>> posAlgPair = algorithmService.definePositionsByAlgorithm(position, historyIndex);
         final Algorithm algorithm = posAlgPair.getKey();
         final List<Position> positions = posAlgPair.getValue();
 
         final BigDecimal beforeActionAvgSales = defineAverageSales(algorithm, positions, Position::getBeforeActionAverageSales);
         final BigDecimal actionAvgSales = defineAverageSales(algorithm, positions, Position::getActionAverageSales);
-        final BigDecimal actualAverageSales = getActualAverageSales(position, actualAvgSales);
+        final BigDecimal actualAverageSales = getActualAverageSales(position, cyclicActionState.getSalesIndex());
 
         position.setAlgorithm(algorithm);
         position.setBeforeActionAverageSales(beforeActionAvgSales);
@@ -55,11 +60,9 @@ public class CyclicActionItemProcessor implements ItemProcessor<Position, Positi
                 averageSalesService.getAverageSales(positions, avgSalesFunc);
     }
 
-    private BigDecimal getActualAverageSales(final Position position, final List<SalesPeriod> actualSales) {
-        return actualSales.stream()
-                .filter(actual -> Objects.equals(actual.store(), position.getStore())
-                        && Objects.equals(actual.actionCode(), position.getActionCode()))
-                .findFirst()
+    private BigDecimal getActualAverageSales(final Position position, final Map<StoreActionCodeKey, SalesPeriod> salesIndex) {
+        final StoreActionCodeKey key = new StoreActionCodeKey(position.getStore(), position.getActionCode());
+        return Optional.ofNullable(salesIndex.get(key))
                 .map(SalesPeriod::actionAverageSales)
                 .map(bigDecimal -> bigDecimal.setScale(DEFAULT_AVERAGE_SALES_SCALE, DEFAULT_ROUNDING_MODE))
                 .orElse(BigDecimal.ZERO);

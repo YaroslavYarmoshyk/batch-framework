@@ -1,9 +1,10 @@
 package com.etake.cyclicaction.config.processor;
 
-import com.etake.cyclicaction.dao.InMemoryStore;
+import com.etake.cyclicaction.dao.CyclicActionState;
 import com.etake.cyclicaction.enumeration.ActionType;
 import com.etake.cyclicaction.model.Position;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.batch.infrastructure.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +15,10 @@ import java.time.LocalDate;
 import static com.etake.cyclicaction.util.CyclicUtil.isAnalyzedPosition;
 
 @Configuration
+@RequiredArgsConstructor
 public class ActionHistoryItemProcessor implements ItemProcessor<Position, Position> {
+    private final CyclicActionState cyclicActionState;
+
     @Value("${cyclic-action.start-date}")
     @DateTimeFormat(pattern = "dd.MM.yyyy")
     private LocalDate actionStartDate;
@@ -28,7 +32,7 @@ public class ActionHistoryItemProcessor implements ItemProcessor<Position, Posit
             return null;
         }
         if (isAnalyzedPosition(position, actionStartDate, actionEndDate)) {
-            InMemoryStore.addPositionToActualAction(position);
+            cyclicActionState.addPositionToActualAction(position);
             return null;
         }
         return position;

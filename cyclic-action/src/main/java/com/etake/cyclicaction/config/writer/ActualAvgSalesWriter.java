@@ -1,8 +1,9 @@
 package com.etake.cyclicaction.config.writer;
 
-import com.etake.cyclicaction.dao.InMemoryStore;
+import com.etake.cyclicaction.dao.CyclicActionState;
 import com.etake.cyclicaction.model.SalesPeriod;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.batch.infrastructure.item.Chunk;
 import org.springframework.batch.infrastructure.item.ExecutionContext;
 import org.springframework.batch.infrastructure.item.ItemStreamException;
@@ -10,11 +11,13 @@ import org.springframework.batch.infrastructure.item.ItemStreamWriter;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class ActualAvgSalesWriter implements ItemStreamWriter<SalesPeriod> {
+    private final CyclicActionState cyclicActionState;
 
     @Override
     public void write(@NonNull final Chunk<? extends SalesPeriod> chunk) {
-        InMemoryStore.addPeriodsToActualAvgSales(chunk.getItems());
+        cyclicActionState.addPeriodsToActualAvgSales(chunk.getItems());
     }
 
     @Override

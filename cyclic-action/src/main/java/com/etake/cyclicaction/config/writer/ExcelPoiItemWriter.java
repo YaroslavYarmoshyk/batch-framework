@@ -1,7 +1,7 @@
 package com.etake.cyclicaction.config.writer;
 
 import com.etake.cyclicaction.config.properties.ExcelManagementProperties;
-import com.etake.cyclicaction.dao.InMemoryStore;
+import com.etake.cyclicaction.dao.CyclicActionState;
 import com.etake.cyclicaction.model.Position;
 import com.excel.custom.library.service.ExcelFormatService;
 import com.excel.custom.library.util.ExcelUtils;
@@ -51,6 +51,7 @@ import static com.excel.custom.library.util.ExcelUtils.setCellValue;
 public class ExcelPoiItemWriter implements ItemStreamWriter<Position> {
     private final ExcelFormatService excelFormatService;
     private final ExcelManagementProperties excelProperties;
+    private final CyclicActionState cyclicActionState;
 
     @Value("${cyclic-action.start-date}")
     @DateTimeFormat(pattern = "dd.MM.yyyy")
@@ -80,7 +81,7 @@ public class ExcelPoiItemWriter implements ItemStreamWriter<Position> {
             workbook = new XSSFWorkbook();
             sheet = workbook.createSheet("result");
             createHeader();
-            ExcelUtils.createCells(sheet, InMemoryStore.cyclicAction.size(), indexes.size());
+            ExcelUtils.createCells(sheet, cyclicActionState.getCyclicAction().size(), indexes.size());
         } catch (Exception e) {
             throw new ItemStreamException("Failed to initialize ExcelPoiItemWriter", e);
         }
@@ -151,7 +152,7 @@ public class ExcelPoiItemWriter implements ItemStreamWriter<Position> {
         final CellStyle cellStyle = createFractionalDataStyle(sheet);
         for (final String name : FRACTIONAL_COLUMN_NAMES) {
             final Integer index = indexes.get(name);
-            ExcelUtils.applyCellStyle(sheet, cellStyle, 1, index, InMemoryStore.cyclicAction.size(), index);
+            ExcelUtils.applyCellStyle(sheet, cellStyle, 1, index, cyclicActionState.getCyclicAction().size(), index);
         }
     }
 

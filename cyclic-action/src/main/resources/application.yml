@@ -20,3 +20,7 @@ excel-management:
 cyclic-action:
   start-date: ${START_DATE}
   end-date: ${END_DATE}
+
+logging:
+  level:
+    org.springframework.batch.core.step.AbstractStep: WARN
