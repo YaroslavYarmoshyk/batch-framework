@@ -40,6 +40,12 @@ bin/
 ### Claude Code local settings ###
 .claude/settings.local.json
 
+### Local env files — contain secrets, not committed ###
+.env
+
+### Google service-account credentials — cyclic-forecast keeps its key here ###
+**/google/*
+
 ### Business data — inputs/outputs are local working files, not source ###
 **/src/main/resources/input/*
 !**/src/main/resources/input/README.md

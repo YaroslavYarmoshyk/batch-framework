@@ -2,6 +2,7 @@ rootProject.name = 'batch-framework'
 
 include 'turnover-plan'
 include 'cyclic-action'
+include 'cyclic-forecast'
 include 'excel-library'
 include 'avg-check-plan'
 include 'sales-plan'

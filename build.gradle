@@ -35,6 +35,8 @@ subprojects {
         compileOnly libs.lombok
         runtimeOnly libs.mssql.jdbc
         annotationProcessor libs.lombok
+        testImplementation libs.spring.boot.starter.test
+        testRuntimeOnly libs.junit.platform.launcher
     }
 
     tasks.named('test') {

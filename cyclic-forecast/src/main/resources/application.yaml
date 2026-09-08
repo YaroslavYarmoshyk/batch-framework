@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: cyclic-forecast
+  datasource:
+    url: ${DB_URL}
+
+cyclic-forecast:
+  planning-scope:
+    from-date: ${START_DATE}
+    to-date: ${END_DATE}
+    promotion-type: ${PROMOTION_TYPE}
+  lookback:
+    months: 12
+  store-similarity:
+    require-same-store-format: true
+    allow-format-fallback: true
+    baseline-lookback-months: 12
+  hierarchy:
+    level3-column: third_subcategory_id
+    level2-column: second_subcategory_id
+  demand-days: 14
+  output:
+    excel-output-directory: output/
+  google-sheets:
+    enabled: ${GOOGLE_SHEETS_ENABLED:false}
+    service-account-key-path: ${GOOGLE_SHEETS_KEY_PATH:}
+    spreadsheet-id: ${GOOGLE_SHEETS_SPREADSHEET_ID:}
+    sheet-name: result
+
+logging:
+  level:
+    org.springframework.batch.core.step.AbstractStep: WARN

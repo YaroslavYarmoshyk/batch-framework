@@ -69,9 +69,11 @@ before running. Variables in use across modules:
 
 | Variable              | Used by                                                        |
 |------------------------|-----------------------------------------------------------------|
-| `DB_URL`               | `sales-plan`, `turnover-plan`                                   |
+| `DB_URL`               | `sales-plan`, `turnover-plan`, `cyclic-forecast`                 |
 | `DB_USERNAME`, `DB_PASSWORD` | `cyclic-action`, `avg-check-plan`, `store-plan-adjustment`, `turnover-plan` |
-| `START_DATE`, `END_DATE`     | `cyclic-action`, `avg-check-plan`, `store-plan-adjustment`  |
+| `START_DATE`, `END_DATE`     | `cyclic-action`, `avg-check-plan`, `store-plan-adjustment`, `cyclic-forecast` |
+| `PROMOTION_TYPE`       | `cyclic-forecast`                                                |
+| `GOOGLE_SHEETS_ENABLED`, `GOOGLE_SHEETS_KEY_PATH`, `GOOGLE_SHEETS_SPREADSHEET_ID` | `cyclic-forecast` (optional export; key file lives in `cyclic-forecast/google/`, git-ignored) |
 | `UPLOAD_TO_DB`         | `avg-check-plan` (optional, defaults to `false`)                 |
 | `YEAR`, `MONTH`, `ENABLED_DISTRIBUTION`, `UPLOAD_PLANS`, `CREATE_REPORT` | `sales-plan` |
 | `PLANNED_YEAR`, `PLANNED_MONTH` | `turnover-plan`                                             |

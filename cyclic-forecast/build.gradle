@@ -1,0 +1,12 @@
+dependencies {
+    implementation project(':excel-library')
+    implementation libs.google.api.client
+    implementation libs.google.api.services.sheets
+    implementation libs.google.auth.library.oauth2.http
+}
+
+bootJar {
+    enabled = true
+    archiveBaseName = 'cyclic-forecast'
+    archiveVersion = '0.0.1-SNAPSHOT'
+}

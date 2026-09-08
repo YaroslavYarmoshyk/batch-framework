@@ -8,6 +8,9 @@ xerces = "2.12.2"
 sax = "2.0.1"
 lombok = "1.18.42"
 mssql-jdbc = "12.8.0.jre11"
+google-api-client = "2.8.0"
+google-api-services-sheets = "v4-rev20250603-2.0.0"
+google-auth-library-oauth2-http = "1.23.0"
 
 [libraries]
 spring-boot-starter-batch-jdbc = { module = "org.springframework.boot:spring-boot-starter-batch-jdbc" }
@@ -19,6 +22,11 @@ xerces-impl = { module = "xerces:xercesImpl", version.ref = "xerces" }
 sax = { module = "sax:sax", version.ref = "sax" }
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
 mssql-jdbc = { module = "com.microsoft.sqlserver:mssql-jdbc", version.ref = "mssql-jdbc" }
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+google-api-client = { module = "com.google.api-client:google-api-client", version.ref = "google-api-client" }
+google-api-services-sheets = { module = "com.google.apis:google-api-services-sheets", version.ref = "google-api-services-sheets" }
+google-auth-library-oauth2-http = { module = "com.google.auth:google-auth-library-oauth2-http", version.ref = "google-auth-library-oauth2-http" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
