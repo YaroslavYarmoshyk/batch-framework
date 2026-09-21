@@ -31,14 +31,17 @@ public class StoreCategoryRepository {
                 .list();
     }
 
-    public List<StoreCategoryPerformance> getStoreCategoryPerformance(String region) {
+    public List<StoreCategoryPerformance> getStoreCategoryPerformanceByRegions(List<String> regions) {
+        if (regions == null || regions.isEmpty()) {
+            return List.of();
+        }
         List<String> stores = jdbcClient.sql("""
                         SELECT l.name
                         FROM locations l
                         JOIN regions r ON r.id = l.region_id
-                        WHERE r.name = :region
+                        WHERE r.name IN (:regions)
                         """)
-                .param("region", region)
+                .param("regions", regions)
                 .query(String.class)
                 .list();
         return getStoreCategoryPerformance(stores);

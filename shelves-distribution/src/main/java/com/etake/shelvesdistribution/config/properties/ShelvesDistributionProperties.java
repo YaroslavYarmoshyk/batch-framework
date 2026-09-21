@@ -9,6 +9,6 @@ import java.util.List;
 public record ShelvesDistributionProperties(
         boolean groupedByStore,
         Granularity granularity,
-        String region,
+        List<String> regions,
         List<String> stores) {
 }

@@ -10,9 +10,8 @@ features:
   distribution:
     grouped-by-store: ${GROUPED_BY_STORE}
     granularity: ${GRANULARITY}
-    region:
-    stores:
-      - ${STORES}
+    regions: ${REGIONS}
+    stores: ${STORES}
 
 system-configurations:
   output: src/main/resources/output/

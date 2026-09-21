@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,20 +32,20 @@ class ShelvesDistributionServiceTest {
     @Test
     void generateShelvesDistributionReport_notGroupedByStore_sumsPerformanceAcrossStoresPerCategory() throws Exception {
         when(services.stream()).thenReturn(Stream.of(storeCategoryService));
-        when(storeCategoryService.getGranularity()).thenReturn(Granularity.REGION);
+        when(storeCategoryService.getGranularity()).thenReturn(Granularity.REGIONS);
         when(storeCategoryService.getStoreCategoryPerformance()).thenReturn(List.of(
                 new StoreCategoryPerformance("Store A", "Toys", new BigDecimal("100"), new BigDecimal("60"), new BigDecimal("10")),
                 new StoreCategoryPerformance("Store B", "Toys", new BigDecimal("50"), new BigDecimal("20"), new BigDecimal("5")),
                 new StoreCategoryPerformance("Store A", "Books", new BigDecimal("30"), new BigDecimal("10"), new BigDecimal("2"))
         ));
-        ShelvesDistributionProperties properties = new ShelvesDistributionProperties(false, Granularity.REGION, "West", List.of());
+        ShelvesDistributionProperties properties = new ShelvesDistributionProperties(false, Granularity.REGIONS, List.of("West"), List.of());
         ShelvesDistributionService service = new ShelvesDistributionService(properties, services, excelService);
 
         service.generateShelvesDistributionReport();
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<CategoryPerformance>> captor = ArgumentCaptor.forClass(List.class);
-        verify(excelService).generateReport(captor.capture(), eq("West"));
+        verify(excelService).generateAggregateReport(captor.capture());
         List<CategoryPerformance> categories = captor.getValue();
 
         assertThat(categories).hasSize(2);
@@ -68,7 +67,7 @@ class ShelvesDistributionServiceTest {
         List<StoreCategoryPerformance> rows = List.of(
                 new StoreCategoryPerformance("Store A", "Toys", BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ZERO));
         when(storeCategoryService.getStoreCategoryPerformance()).thenReturn(rows);
-        ShelvesDistributionProperties properties = new ShelvesDistributionProperties(true, Granularity.STORES, null, List.of());
+        ShelvesDistributionProperties properties = new ShelvesDistributionProperties(true, Granularity.STORES, List.of(), List.of());
         ShelvesDistributionService service = new ShelvesDistributionService(properties, services, excelService);
 
         service.generateShelvesDistributionReport();

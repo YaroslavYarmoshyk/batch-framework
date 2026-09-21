@@ -17,11 +17,11 @@ public class RegionalStoreCategoryBreakdown implements StoreCategoryService {
 
     @Override
     public List<StoreCategoryPerformance> getStoreCategoryPerformance() {
-        return storeCategoryRepository.getStoreCategoryPerformance(shelvesDistributionProperties.region());
+        return storeCategoryRepository.getStoreCategoryPerformanceByRegions(shelvesDistributionProperties.regions());
     }
 
     @Override
     public Granularity getGranularity() {
-        return Granularity.REGION;
+        return Granularity.REGIONS;
     }
 }

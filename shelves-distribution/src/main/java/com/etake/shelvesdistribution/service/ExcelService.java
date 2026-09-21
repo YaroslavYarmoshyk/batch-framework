@@ -85,7 +85,7 @@ public class ExcelService {
         String fileName = String.format("Розподіл стелажів %s.xlsx", LocalDate.now());
         List<StoreCategoryPerformance> sorted = storeCategories.stream().sorted().toList();
         List<String> stores = sorted.stream().map(StoreCategoryPerformance::store).distinct().toList();
-        writeWorkbook(fileName, SHEET_NAME, (workbook, sheet) -> {
+        writeWorkbook(fileName, (workbook, sheet) -> {
             writeFlatHeaders(workbook, sheet);
             writeFlatDataRows(sheet, sorted);
             writeFlatLookupTable(sheet, stores);
@@ -215,12 +215,12 @@ public class ExcelService {
             "Разом", "Рейтинг", "К-сть стелажів", "Приймаємо", "Різниця"
     };
 
-    public void generateReport(List<CategoryPerformance> categories, String label) throws IOException {
+    public void generateAggregateReport(List<CategoryPerformance> categories) throws IOException {
         String fileName = String.format("Розподіл стелажів %s.xlsx", LocalDate.now());
         List<CategoryPerformance> sorted = categories.stream().sorted().toList();
         int first = AGG_FIRST_DATA_ROW;
         int last = first + sorted.size() - 1;
-        writeWorkbook(fileName, sanitizeSheetName(label), (workbook, sheet) -> {
+        writeWorkbook(fileName, (workbook, sheet) -> {
             writeAggregateConfigRow(workbook, sheet);
             writeAggregateHeaders(workbook, sheet);
             writeAggregateDataRows(sheet, sorted, first, last);
@@ -355,26 +355,15 @@ public class ExcelService {
         ExcelUtils.applyDataFormat(workbook, sheet, firstDataRow, AGG_IDX_SHELF_COUNT, lastDataRow, AGG_IDX_DIFFERENCE, "0.00");
     }
 
-    private void writeWorkbook(String fileName, String sheetName, BiConsumer<Workbook, Sheet> sheetBuilder) throws IOException {
+    private void writeWorkbook(String fileName, BiConsumer<Workbook, Sheet> sheetBuilder) throws IOException {
         File directory = ResourcePaths.resolve(output);
         directory.mkdirs();
         try (Workbook workbook = new XSSFWorkbook(); FileOutputStream fileOutputStream = new FileOutputStream(new File(directory, fileName))) {
-            Sheet sheet = workbook.createSheet(sheetName);
+            Sheet sheet = workbook.createSheet(ExcelService.SHEET_NAME);
             sheetBuilder.accept(workbook, sheet);
             workbook.setForceFormulaRecalculation(true);
             workbook.write(fileOutputStream);
         }
-    }
-
-    private static String sanitizeSheetName(String label) {
-        if (label == null || label.isBlank()) {
-            return SHEET_NAME;
-        }
-        String sanitized = label.replaceAll("[\\\\/?*\\[\\]:]", " ").trim();
-        if (sanitized.isEmpty()) {
-            return SHEET_NAME;
-        }
-        return sanitized.length() > 31 ? sanitized.substring(0, 31) : sanitized;
     }
 
     private static void setHeaderCell(Row row, int column, String value, CellStyle style) {

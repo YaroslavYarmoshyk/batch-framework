@@ -81,17 +81,17 @@ class ExcelServiceTest {
     void generateReport_notGroupedByStore_writesAggregateLayoutSortedByCategory() throws IOException, InvalidFormatException {
         ReflectionTestUtils.setField(excelService, "output", outputDir.getAbsolutePath());
 
-        excelService.generateReport(List.of(
+        excelService.generateAggregateReport(List.of(
                 new CategoryPerformance("Zebra", new BigDecimal("150"), new BigDecimal("80"), new BigDecimal("15")),
                 new CategoryPerformance("Apple", new BigDecimal("30"), new BigDecimal("10"), new BigDecimal("2")),
                 new CategoryPerformance("Mango", new BigDecimal("20"), new BigDecimal("5"), new BigDecimal("1"))
-        ), "Ковельські магазини");
+        ));
 
         File[] generated = outputDir.listFiles((_, name) -> name.startsWith("Розподіл стелажів") && name.endsWith(".xlsx"));
         assertThat(generated).isNotNull().hasSize(1);
 
         try (XSSFWorkbook workbook = new XSSFWorkbook(Objects.requireNonNull(generated)[0])) {
-            Sheet sheet = workbook.getSheet("Ковельські магазини");
+            Sheet sheet = workbook.getSheet("result");
             assertThat(sheet).isNotNull();
 
             Row configRow = sheet.getRow(0);

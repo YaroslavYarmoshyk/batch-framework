@@ -29,7 +29,7 @@ public class ShelvesDistributionService {
             excelService.generateReport(storeCategories);
         } else {
             List<CategoryPerformance> categories = aggregateByCategory(storeCategories);
-            excelService.generateReport(categories, shelvesDistributionProperties.region());
+            excelService.generateAggregateReport(categories);
         }
     }
 
