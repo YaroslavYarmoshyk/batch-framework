@@ -4,6 +4,7 @@ import com.etake.coresheetrenewal.model.RegionOrder;
 import com.etake.coresheetrenewal.model.StoreCheckPlan;
 import com.etake.coresheetrenewal.model.StoreChecks;
 import com.etake.coresheetrenewal.model.StoreDailySales;
+import com.etake.coresheetrenewal.model.StoreFirstSale;
 import com.etake.coresheetrenewal.model.StoreLocation;
 import com.etake.coresheetrenewal.model.StoreSalesPlan;
 import com.etake.coresheetrenewal.model.StoreStock;
@@ -18,6 +19,8 @@ import java.util.List;
 @Repository
 @RequiredArgsConstructor
 public class StorePerformanceRepository {
+    /** A store without sales for this long before a month counts as opening in it. */
+    private static final int OPENING_LOOKBACK_MONTHS = 3;
     /** Sales history used to split the assortment of a store into A, B and C. */
     private static final int ABC_WINDOW_MONTHS = 3;
 
@@ -44,6 +47,24 @@ public class StorePerformanceRepository {
                         WHERE r.sort_order IS NOT NULL
                         """)
                 .query(RegionOrder.class)
+                .list();
+    }
+
+    /** The first sale of each store selling in the month, looking back only as far as it takes to tell opening stores. */
+    public List<StoreFirstSale> getFirstSales(final YearMonth month) {
+        return jdbcClient.sql("""
+                        SELECT l.name        AS store_name,
+                               MIN(t.[date]) AS first_sale_date
+                        FROM transactions t
+                                 JOIN locations l ON l.id = t.location_id
+                        WHERE t.[date] BETWEEN :from AND :to
+                          AND t.units > 0
+                          AND l.type = 'store'
+                        GROUP BY l.name
+                        """)
+                .param("from", month.minusMonths(OPENING_LOOKBACK_MONTHS).atDay(1))
+                .param("to", month.atEndOfMonth())
+                .query(StoreFirstSale.class)
                 .list();
     }
 
