@@ -3,6 +3,7 @@ package com.etake.coresheetrenewal.sheet;
 import com.etake.coresheetrenewal.model.AbcCategory;
 import com.etake.coresheetrenewal.model.MonthlyTotals;
 import com.etake.coresheetrenewal.model.StorePerformance;
+import com.etake.coresheetrenewal.service.MonthlyTotalsService;
 import com.etake.googlesheets.SheetCells;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public final class ClosedMonthValues {
     private final YearMonth month;
     private final CoreSheetLayout layout;
     private final Map<String, StorePerformance> performance;
+    private final MonthlyTotalsService totalsService;
 
     public List<ValueRange> build() {
         final List<ValueRange> values = new ArrayList<>();
@@ -68,11 +70,11 @@ public final class ClosedMonthValues {
     }
 
     private MonthlyTotals sumOfStores(final CoreSheetRow summary) {
-        return layout.storesOf(summary).stream()
+        return totalsService.sum(summary.name(), layout.storesOf(summary).stream()
                 .map(store -> performance.get(store.name()))
                 .filter(Objects::nonNull)
                 .map(StorePerformance::totals)
-                .reduce(MonthlyTotals.empty(summary.name()), MonthlyTotals::plus);
+                .toList());
     }
 
     private void addCell(final List<ValueRange> values, final CoreSheetRow row, final CoreSheetColumn column, final Object value) {

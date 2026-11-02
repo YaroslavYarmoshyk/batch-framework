@@ -28,15 +28,6 @@ public record StoreChecks(
         return new StoreChecks(storeName, 0, BigDecimal.ZERO, 0, 0, BigDecimal.ZERO);
     }
 
-    public StoreChecks plus(final StoreChecks other) {
-        return new StoreChecks(storeName,
-                checks + other.checks,
-                amount.add(other.amount),
-                positions + other.positions,
-                loyaltyChecks + other.loyaltyChecks,
-                loyaltyAmount.add(other.loyaltyAmount));
-    }
-
     /** @return {@code null} when there were no sale checks, the same for the other averages */
     public BigDecimal avgCheck() {
         return average(amount, checks, MONEY_SCALE);
