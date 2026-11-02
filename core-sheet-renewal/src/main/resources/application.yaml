@@ -1,7 +1,15 @@
 spring:
   application:
     name: core-sheet-renewal
+  datasource:
+    url: ${DB_URL}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
 
 system-configurations:
+  # The month whose sheet is created; the previous month's sheet is filled with its actuals.
   year: ${YEAR}
   month: ${MONTH}
+  abc-stock-enabled: ${ABC_STOCK_ENABLED:false}
+  google-sheets:
+    service-account-key-path: ${GOOGLE_SHEETS_KEY_PATH:google/service-account-key.json}
+    spreadsheet-id: ${GOOGLE_SHEETS_SPREADSHEET_ID}
