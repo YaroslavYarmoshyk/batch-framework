@@ -13,6 +13,7 @@ consumed by the others.
 | `avg-check-plan`           | Forecasts the average-check plan                                      | DB in, `output/` xlsx out          |
 | `turnover-plan`            | Builds the quarterly turnover plan                                    | DB in, `output/` xlsx out          |
 | `store-plan-adjustment`    | Adjusts existing store plans for ad-hoc time-slot changes             | `input/` xlsx in, `output/` xlsx out |
+| `promotion-forecast`       | Forecasts promotion sales from past promotions and lays them out for managers | DB in, Google Sheets out (`apps-script/` exports to 1C) |
 | `excel-library`            | Shared Excel formatting/formula utilities (library, not an app)       | —                                  |
 
 ## Project Structure
@@ -30,6 +31,7 @@ batch-framework/
 ├── avg-check-plan/
 ├── turnover-plan/
 ├── store-plan-adjustment/
+├── promotion-forecast/
 └── excel-library/
 ```
 
@@ -69,11 +71,10 @@ before running. Variables in use across modules:
 
 | Variable              | Used by                                                        |
 |------------------------|-----------------------------------------------------------------|
-| `DB_URL`               | `sales-plan`, `turnover-plan`, `cyclic-forecast`                 |
+| `DB_URL`               | `sales-plan`, `turnover-plan`, `promotion-forecast`              |
 | `DB_USERNAME`, `DB_PASSWORD` | `cyclic-action`, `avg-check-plan`, `store-plan-adjustment`, `turnover-plan` |
-| `START_DATE`, `END_DATE`     | `cyclic-action`, `avg-check-plan`, `store-plan-adjustment`, `cyclic-forecast` |
-| `PROMOTION_TYPE`       | `cyclic-forecast`                                                |
-| `GOOGLE_SHEETS_ENABLED`, `GOOGLE_SHEETS_KEY_PATH`, `GOOGLE_SHEETS_SPREADSHEET_ID` | `cyclic-forecast` (optional export; key file lives in `cyclic-forecast/google/`, git-ignored) |
+| `START_DATE`, `END_DATE`     | `cyclic-action`, `avg-check-plan`, `store-plan-adjustment`, `promotion-forecast` |
+| `GOOGLE_SHEETS_ENABLED`, `GOOGLE_SHEETS_KEY_PATH`, `GOOGLE_SHEETS_SPREADSHEET_ID` | `promotion-forecast` (optional export; key file lives in `promotion-forecast/google/`, git-ignored) |
 | `UPLOAD_TO_DB`         | `avg-check-plan` (optional, defaults to `false`)                 |
 | `YEAR`, `MONTH`, `ENABLED_DISTRIBUTION`, `UPLOAD_PLANS`, `CREATE_REPORT` | `sales-plan` |
 | `PLANNED_YEAR`, `PLANNED_MONTH` | `turnover-plan`                                             |
