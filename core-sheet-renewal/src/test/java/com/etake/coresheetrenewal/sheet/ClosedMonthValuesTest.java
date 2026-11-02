@@ -5,6 +5,7 @@ import com.etake.coresheetrenewal.model.MonthlyTotals;
 import com.etake.coresheetrenewal.model.StoreCheckPlan;
 import com.etake.coresheetrenewal.model.StoreChecks;
 import com.etake.coresheetrenewal.model.StorePerformance;
+import com.etake.coresheetrenewal.service.MonthlyTotalsService;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +33,7 @@ class ClosedMonthValuesTest {
     }
 
     private static Map<String, List<Object>> build(final Map<String, StorePerformance> performance) {
-        return new ClosedMonthValues("Жовтень 26", OCTOBER, LAYOUT, performance).build().stream()
+        return new ClosedMonthValues("Жовтень 26", OCTOBER, LAYOUT, performance, new MonthlyTotalsService()).build().stream()
                 .collect(Collectors.toMap(ValueRange::getRange, range -> range.getValues().getFirst()));
     }
 

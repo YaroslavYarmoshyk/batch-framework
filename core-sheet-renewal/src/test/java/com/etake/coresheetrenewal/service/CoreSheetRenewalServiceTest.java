@@ -46,7 +46,7 @@ class CoreSheetRenewalServiceTest {
     }
 
     private final GoogleSheetsGateway gateway = mock(GoogleSheetsGateway.class);
-    private final CoreSheetRenewalService service = new CoreSheetRenewalService(gateway);
+    private final CoreSheetRenewalService service = new CoreSheetRenewalService(gateway, new MonthlyTotalsService());
 
     @BeforeEach
     void sheetLayout() {

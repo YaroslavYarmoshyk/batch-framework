@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CoreSheetRenewalService {
     private final GoogleSheetsGateway gateway;
+    private final MonthlyTotalsService totalsService;
 
     public void renew(final YearMonth newMonth,
                       final Map<String, StorePerformance> performance,
@@ -69,7 +70,7 @@ public class CoreSheetRenewalService {
         final CoreSheetLayout closedLayout = closedEditor.layout();
         warnAboutRowsWithoutSales(closedTitle, closedLayout, performance);
 
-        gateway.writeValues(new ClosedMonthValues(closedTitle, closedMonth, closedLayout, performance).build());
+        gateway.writeValues(new ClosedMonthValues(closedTitle, closedMonth, closedLayout, performance, totalsService).build());
         log.info("Filled sheet «{}» with the actuals of {} stores", closedTitle, performance.size());
 
         if (sheets.stream().anyMatch(sheet -> newTitle.equals(sheet.getTitle()))) {
