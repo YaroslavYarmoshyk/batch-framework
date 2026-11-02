@@ -1,0 +1,26 @@
+apply plugin: 'java-library'
+
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+}
+
+dependencies {
+    api libs.google.api.client
+    api libs.google.api.services.sheets
+    api(libs.google.auth.library.oauth2.http) {
+        version {
+            strictly libs.versions.google.auth.library.oauth2.http.get()
+            because 'keeps the catalog version for consumers; google-api-client would otherwise raise it transitively'
+        }
+    }
+
+    constraints {
+        api(libs.guava) {
+            because 'google-api-client pulls Guava 33.1.0, whose AbstractFuture uses sun.misc.Unsafe (deprecation warnings on JDK 24+)'
+        }
+    }
+}

@@ -1,7 +1,5 @@
-package com.etake.promotionforecast.writer.googlesheets;
+package com.etake.googlesheets;
 
-import com.etake.promotionforecast.config.properties.GoogleSheetsProperties;
-import com.etake.promotionforecast.util.ResourcePaths;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.sheets.v4.Sheets;
@@ -16,8 +14,8 @@ import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -30,31 +28,31 @@ import java.util.Objects;
  * Thin wrapper over the Sheets API bound to the configured spreadsheet. The client is created lazily,
  * so nothing touches the key file while the export is disabled.
  */
-@Component
 @RequiredArgsConstructor
 public class GoogleSheetsGateway {
-    private static final String APPLICATION_NAME = "promotion-forecast";
     /** Values are parsed as if typed by a user: formulas, ISO dates and percents become typed cells. */
     private static final String USER_ENTERED = "USER_ENTERED";
     /** Keeps each request payload well under the Sheets API size limits for large promotions. */
     static final int ROWS_PER_REQUEST = 5_000;
 
-    private final GoogleSheetsProperties properties;
+    private final String applicationName;
+    private final File serviceAccountKey;
+    private final String spreadsheetId;
     private Sheets client;
 
     public Spreadsheet getSpreadsheet(final String fields) {
-        return execute(() -> client().spreadsheets().get(spreadsheetId()).setFields(fields).execute());
+        return execute(() -> client().spreadsheets().get(spreadsheetId).setFields(fields).execute());
     }
 
     /** Spreadsheet restricted to the given A1 ranges; {@code fields} may then select grid data of those ranges. */
     public Spreadsheet getSpreadsheet(final String fields, final List<String> ranges) {
-        return execute(() -> client().spreadsheets().get(spreadsheetId()).setRanges(ranges).setFields(fields).execute());
+        return execute(() -> client().spreadsheets().get(spreadsheetId).setRanges(ranges).setFields(fields).execute());
     }
 
     /** Reads ranges as raw values; dates come back as serial numbers (see {@link SheetCells#toSerialNumber}). */
     public List<ValueRange> readValues(final List<String> ranges) {
         final List<ValueRange> valueRanges = execute(() -> client().spreadsheets().values()
-                .batchGet(spreadsheetId())
+                .batchGet(spreadsheetId)
                 .setRanges(ranges)
                 .setValueRenderOption("UNFORMATTED_VALUE")
                 .setDateTimeRenderOption("SERIAL_NUMBER")
@@ -63,9 +61,20 @@ public class GoogleSheetsGateway {
         return Objects.requireNonNullElse(valueRanges, List.of());
     }
 
+    /** Reads ranges as entered by users: formula cells come back as their formula text. */
+    public List<ValueRange> readFormulas(final List<String> ranges) {
+        final List<ValueRange> valueRanges = execute(() -> client().spreadsheets().values()
+                .batchGet(spreadsheetId)
+                .setRanges(ranges)
+                .setValueRenderOption("FORMULA")
+                .execute()
+                .getValueRanges());
+        return Objects.requireNonNullElse(valueRanges, List.of());
+    }
+
     public void clearValues(final String range) {
         execute(() -> client().spreadsheets().values()
-                .clear(spreadsheetId(), range, new ClearValuesRequest())
+                .clear(spreadsheetId, range, new ClearValuesRequest())
                 .execute());
     }
 
@@ -98,32 +107,35 @@ public class GoogleSheetsGateway {
             return;
         }
         execute(() -> client().spreadsheets()
-                .batchUpdate(spreadsheetId(), new BatchUpdateSpreadsheetRequest().setRequests(requests))
+                .batchUpdate(spreadsheetId, new BatchUpdateSpreadsheetRequest().setRequests(requests))
                 .execute());
+    }
+
+    /** Writes each value range into its own A1 range, in a single request. */
+    public void writeValues(final List<ValueRange> data) {
+        if (!data.isEmpty()) {
+            sendValues(data);
+        }
     }
 
     private void sendValues(final List<ValueRange> data) {
         execute(() -> client().spreadsheets().values()
-                .batchUpdate(spreadsheetId(), new BatchUpdateValuesRequest()
+                .batchUpdate(spreadsheetId, new BatchUpdateValuesRequest()
                         .setValueInputOption(USER_ENTERED)
                         .setData(data))
                 .execute());
     }
 
-    private String spreadsheetId() {
-        return properties.spreadsheetId();
-    }
-
     private synchronized Sheets client() throws IOException, GeneralSecurityException {
         if (client == null) {
-            try (FileInputStream in = new FileInputStream(ResourcePaths.resolve(properties.serviceAccountKeyPath()))) {
+            try (FileInputStream in = new FileInputStream(serviceAccountKey)) {
                 final GoogleCredentials credentials = ServiceAccountCredentials.fromStream(in)
                         .createScoped(SheetsScopes.SPREADSHEETS);
                 client = new Sheets.Builder(
                         GoogleNetHttpTransport.newTrustedTransport(),
                         GsonFactory.getDefaultInstance(),
                         new HttpCredentialsAdapter(credentials))
-                        .setApplicationName(APPLICATION_NAME)
+                        .setApplicationName(applicationName)
                         .build();
             }
         }

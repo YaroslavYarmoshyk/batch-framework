@@ -1,4 +1,4 @@
-package com.etake.promotionforecast.writer.googlesheets;
+package com.etake.googlesheets;
 
 import java.util.List;
 
