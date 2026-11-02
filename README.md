@@ -13,7 +13,7 @@ consumed by the others.
 | `avg-check-plan`           | Forecasts the average-check plan                                      | DB in, `output/` xlsx out          |
 | `turnover-plan`            | Builds the quarterly turnover plan                                    | DB in, `output/` xlsx out          |
 | `store-plan-adjustment`    | Adjusts existing store plans for ad-hoc time-slot changes             | `input/` xlsx in, `output/` xlsx out |
-| `promotion-forecast`       | Forecasts promotion sales from past promotions and lays them out for managers | DB in, Google Sheets out (`apps-script/` exports to 1C) |
+| `promotion-forecast`       | Forecasts promotion sales from past promotions and lays them out for managers | DB in, Google Sheets out |
 | `excel-library`            | Shared Excel formatting/formula utilities (library, not an app)       | —                                  |
 
 ## Project Structure

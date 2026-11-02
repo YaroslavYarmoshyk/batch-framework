@@ -19,20 +19,6 @@ class PromotionSheetLayoutTest {
                 "Чи враховувати кратність на магазині", "Перша відправка, %");
     }
 
-    /** These indexes are hardcoded in TOTAL_COLUMN of apps-script/promotion.gs (1C export) — update both together. */
-    @Test
-    void columnsReadByTheAppsScriptExportStayInPlace() {
-        assertThat(TotalColumn.MANAGER.index()).isEqualTo(0);
-        assertThat(TotalColumn.STORE.index()).isEqualTo(1);
-        assertThat(TotalColumn.PRODUCT_ID.index()).isEqualTo(5);
-        assertThat(TotalColumn.PRODUCT_NAME.index()).isEqualTo(6);
-        assertThat(TotalColumn.MANAGER_QTY.index()).isEqualTo(11);
-        assertThat(TotalColumn.INCLUDE_STOCK.index()).isEqualTo(12);
-        assertThat(TotalColumn.MULTIPLICITY.index()).isEqualTo(13);
-        assertThat(TotalColumn.INCLUDE_MULTIPLICITY.index()).isEqualTo(14);
-        assertThat(TotalColumn.FIRST_SHIPMENT.index()).isEqualTo(15);
-    }
-
     @Test
     void convertsColumnIndexesToLetters() {
         assertThat(PromotionSheetLayout.letter(0)).isEqualTo("A");
