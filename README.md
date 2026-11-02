@@ -14,7 +14,9 @@ consumed by the others.
 | `turnover-plan`            | Builds the quarterly turnover plan                                    | DB in, `output/` xlsx out          |
 | `store-plan-adjustment`    | Adjusts existing store plans for ad-hoc time-slot changes             | `input/` xlsx in, `output/` xlsx out |
 | `promotion-forecast`       | Forecasts promotion sales from past promotions and lays them out for managers | DB in, Google Sheets out |
+| `core-sheet-renewal`       | Fills the finished month's sheet of the core spreadsheet with actuals and creates the next month's sheet from it | DB in, Google Sheets out |
 | `excel-library`            | Shared Excel formatting/formula utilities (library, not an app)       | —                                  |
+| `google-sheets-library`    | Shared Google Sheets gateway and request helpers (library, not an app) | —                                  |
 
 ## Project Structure
 
@@ -32,7 +34,9 @@ batch-framework/
 ├── turnover-plan/
 ├── store-plan-adjustment/
 ├── promotion-forecast/
-└── excel-library/
+├── core-sheet-renewal/
+├── excel-library/
+└── google-sheets-library/
 ```
 
 Common dependencies (Spring Batch, POI, the JDBC driver, Lombok, etc.) and the Java toolchain
@@ -71,10 +75,11 @@ before running. Variables in use across modules:
 
 | Variable              | Used by                                                        |
 |------------------------|-----------------------------------------------------------------|
-| `DB_URL`               | `sales-plan`, `turnover-plan`, `promotion-forecast`              |
+| `DB_URL`               | `sales-plan`, `turnover-plan`, `promotion-forecast`, `core-sheet-renewal` |
 | `DB_USERNAME`, `DB_PASSWORD` | `cyclic-action`, `avg-check-plan`, `store-plan-adjustment`, `turnover-plan` |
 | `START_DATE`, `END_DATE`     | `cyclic-action`, `avg-check-plan`, `store-plan-adjustment`, `promotion-forecast` |
-| `GOOGLE_SHEETS_ENABLED`, `GOOGLE_SHEETS_KEY_PATH`, `GOOGLE_SHEETS_SPREADSHEET_ID` | `promotion-forecast` (optional export; key file lives in `promotion-forecast/google/`, git-ignored) |
+| `GOOGLE_SHEETS_ENABLED`, `GOOGLE_SHEETS_KEY_PATH`, `GOOGLE_SHEETS_SPREADSHEET_ID` | `promotion-forecast` (optional export; the key file shared by Google Sheets jobs lives in `google-sheets-library/google/`, git-ignored) |
+| `YEAR`, `MONTH`, `GOOGLE_SHEETS_KEY_PATH`, `GOOGLE_SHEETS_SPREADSHEET_ID`, `ABC_STOCK_ENABLED` | `core-sheet-renewal` (`YEAR`/`MONTH` name the sheet to create; the previous month's sheet gets the actuals; `ABC_STOCK_ENABLED` is optional, defaults to `false`) |
 | `UPLOAD_TO_DB`         | `avg-check-plan` (optional, defaults to `false`)                 |
 | `YEAR`, `MONTH`, `ENABLED_DISTRIBUTION`, `UPLOAD_PLANS`, `CREATE_REPORT` | `sales-plan` |
 | `PLANNED_YEAR`, `PLANNED_MONTH` | `turnover-plan`                                             |
