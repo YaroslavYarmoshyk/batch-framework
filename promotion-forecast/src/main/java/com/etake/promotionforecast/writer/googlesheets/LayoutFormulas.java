@@ -1,5 +1,6 @@
 package com.etake.promotionforecast.writer.googlesheets;
 
+import com.etake.googlesheets.SheetCells;
 import com.etake.promotionforecast.writer.googlesheets.PromotionSheetLayout.ForecastColumn;
 import com.etake.promotionforecast.writer.googlesheets.PromotionSheetLayout.TotalColumn;
 

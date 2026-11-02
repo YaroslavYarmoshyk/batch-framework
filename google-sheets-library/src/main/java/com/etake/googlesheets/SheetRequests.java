@@ -1,4 +1,4 @@
-package com.etake.promotionforecast.writer.googlesheets;
+package com.etake.googlesheets;
 
 import com.google.api.services.sheets.v4.model.AppendDimensionRequest;
 import com.google.api.services.sheets.v4.model.BasicFilter;
@@ -20,6 +20,8 @@ import com.google.api.services.sheets.v4.model.DuplicateSheetRequest;
 import com.google.api.services.sheets.v4.model.ExtendedValue;
 import com.google.api.services.sheets.v4.model.GridProperties;
 import com.google.api.services.sheets.v4.model.GridRange;
+import com.google.api.services.sheets.v4.model.InsertDimensionRequest;
+import com.google.api.services.sheets.v4.model.MoveDimensionRequest;
 import com.google.api.services.sheets.v4.model.NumberFormat;
 import com.google.api.services.sheets.v4.model.RepeatCellRequest;
 import com.google.api.services.sheets.v4.model.Request;
@@ -162,6 +164,32 @@ public final class SheetRequests {
                 .setRange(new DimensionRange().setSheetId(sheetId).setDimension("COLUMNS").setStartIndex(fromColumn).setEndIndex(toColumn)));
     }
 
+    /** Inserts an empty row at {@code row}, styled like the row above it. */
+    public static Request insertRow(final int sheetId, final int row) {
+        return new Request().setInsertDimension(new InsertDimensionRequest()
+                .setRange(rowRange(sheetId, row))
+                .setInheritFromBefore(true));
+    }
+
+    public static Request deleteRow(final int sheetId, final int row) {
+        return new Request().setDeleteDimension(new DeleteDimensionRequest().setRange(rowRange(sheetId, row)));
+    }
+
+    /** {@code destination} is where the rows go in the coordinates from before they are taken out. */
+    public static Request moveRows(final int sheetId, final int row, final int count, final int destination) {
+        return new Request().setMoveDimension(new MoveDimensionRequest()
+                .setSource(new DimensionRange().setSheetId(sheetId).setDimension("ROWS").setStartIndex(row).setEndIndex(row + count))
+                .setDestinationIndex(destination));
+    }
+
+    /** Copies a whole row with its styling; relative references of formulas shift to the destination row. */
+    public static Request copyRow(final int sheetId, final int sourceRow, final int destinationRow) {
+        return new Request().setCopyPaste(new CopyPasteRequest()
+                .setSource(new GridRange().setSheetId(sheetId).setStartRowIndex(sourceRow).setEndRowIndex(sourceRow + 1))
+                .setDestination(new GridRange().setSheetId(sheetId).setStartRowIndex(destinationRow).setEndRowIndex(destinationRow + 1))
+                .setPasteType("PASTE_NORMAL"));
+    }
+
     public static Request columnWidth(final int sheetId, final int column, final int pixels) {
         return dimensionSize(sheetId, "COLUMNS", column, pixels);
     }
@@ -187,6 +215,17 @@ public final class SheetRequests {
                 .setFields("hidden"));
     }
 
+    public static Request tabColor(final int sheetId, final ColorStyle color) {
+        return new Request().setUpdateSheetProperties(new UpdateSheetPropertiesRequest()
+                .setProperties(new SheetProperties().setSheetId(sheetId).setTabColorStyle(color))
+                .setFields("tabColorStyle"));
+    }
+
+    /** A field in the mask with no value resets it, leaving the tab uncoloured. */
+    public static Request clearTabColor(final int sheetId) {
+        return tabColor(sheetId, null);
+    }
+
     public static Request deleteSheet(final int sheetId) {
         return new Request().setDeleteSheet(new DeleteSheetRequest().setSheetId(sheetId));
     }
@@ -201,6 +240,10 @@ public final class SheetRequests {
 
     public static ColorStyle rgb(final int red, final int green, final int blue) {
         return new ColorStyle().setRgbColor(new Color().setRed(red / 255f).setGreen(green / 255f).setBlue(blue / 255f));
+    }
+
+    private static DimensionRange rowRange(final int sheetId, final int row) {
+        return new DimensionRange().setSheetId(sheetId).setDimension("ROWS").setStartIndex(row).setEndIndex(row + 1);
     }
 
     private static Request dimensionSize(final int sheetId, final String dimension, final int index, final int pixels) {

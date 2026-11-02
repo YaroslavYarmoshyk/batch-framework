@@ -1,4 +1,4 @@
-package com.etake.promotionforecast.util;
+package com.etake.googlesheets;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -10,21 +10,17 @@ import java.net.URL;
 import java.security.CodeSource;
 
 /**
- * Resolves a configured resource path so it works regardless of the JVM's working directory.
+ * Resolves the configured path of the service account key so it works regardless of the JVM's working directory.
  *
- * <p>A configured path is used verbatim when absolute. When relative it is resolved against, in
- * order: (1) the current working directory if the file already exists there, then (2) the module
- * directory — the nearest ancestor of the running classes/jar that contains a {@code build.gradle} —
- * if the file already exists there (e.g. {@code google/service-account-key.json}), then (3)
- * {@code src/main/resources} under the module directory. If none yields an existing file (e.g. an
- * output directory about to be created) the resources-relative location is preferred, falling back
- * to the working-directory location when the module cannot be determined.
+ * <p>A configured path is used verbatim when absolute. When relative it is resolved against, in order: (1) the current
+ * working directory if the file exists there, then (2) this library's module directory, where the key shared by all
+ * Google Sheets jobs lives ({@code google/service-account-key.json}, git-ignored). A packaged application has no module
+ * directory and should configure an absolute path. The key must stay out of {@code src/main/resources}, which would
+ * bundle it into the jar.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ResourcePaths {
-
-    private static final String RESOURCES_DIR = "src/main/resources";
 
     public static File resolve(final String configured) {
         final File asConfigured = new File(configured);
@@ -38,14 +34,7 @@ public final class ResourcePaths {
         }
 
         final File moduleRoot = moduleRoot();
-        if (moduleRoot != null) {
-            final File moduleBased = new File(moduleRoot, configured);
-            if (moduleBased.exists()) {
-                return moduleBased;
-            }
-            return new File(new File(moduleRoot, RESOURCES_DIR), configured);
-        }
-        return workingDirBased;
+        return moduleRoot != null ? new File(moduleRoot, configured) : workingDirBased;
     }
 
     private static File moduleRoot() {
