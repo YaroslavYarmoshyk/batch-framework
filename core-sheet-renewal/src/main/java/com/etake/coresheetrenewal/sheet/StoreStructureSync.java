@@ -2,6 +2,7 @@ package com.etake.coresheetrenewal.sheet;
 
 import com.etake.coresheetrenewal.model.StoreLocation;
 import com.etake.coresheetrenewal.model.StorePerformance;
+import com.etake.coresheetrenewal.service.StoreClosureRule;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +14,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * Brings the rows of month sheets in line with the database. The finished month's sheet records who traded in it, so
@@ -23,8 +23,6 @@ import java.util.stream.IntStream;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class StoreStructureSync {
-    /** The last days of a month without sales that mark a store as closed, as {@code close_date} is often set late. */
-    private static final int DAYS_WITHOUT_SALES_TO_CLOSE = 2;
 
     /**
      * Adds the stores that had sales but have no row. A store whose region is unknown stops the job before any write.
@@ -68,7 +66,7 @@ public final class StoreStructureSync {
      * loaded yet, the actuals would be incomplete and every store would look closed.
      */
     public static void requireLastDaysLoaded(final LocalDate monthStart, final Map<String, StorePerformance> performance) {
-        for (final LocalDate day : lastDays(monthStart)) {
+        for (final LocalDate day : StoreClosureRule.lastDays(monthStart)) {
             if (performance.values().stream().noneMatch(store -> store.soldOn(day))) {
                 throw new IllegalStateException("No store has sales on %s, are the transactions loaded?".formatted(day));
             }
@@ -77,9 +75,7 @@ public final class StoreStructureSync {
 
     /**
      * Removes the stores that closed before the month, moves the stores whose region changed, drops regions left empty
-     * and sorts the regions.
-     * A store without sales on the last days counts as closed too, unless it has a plan for the month: then it is only
-     * closed temporarily. A set {@code close_date} is final, whatever the plan says.
+     * and sorts the regions. See {@link StoreClosureRule} for what counts as closed.
      */
     public static void applyToNewMonth(final SheetStructureEditor editor,
                                        final CoreSheetLayout layout,
@@ -100,10 +96,10 @@ public final class StoreStructureSync {
     private static void syncStore(final SheetStructureEditor editor, final String store, final String currentRegion,
                                   final LocalDate monthStart, final StoreLocation location, final StorePerformance sales,
                                   final boolean planned) {
-        final boolean noRecentSales = noSalesOnLastDays(sales, monthStart);
+        final boolean noRecentSales = StoreClosureRule.noSalesOnLastDays(sales == null ? Map.of() : sales.dailySales(), monthStart);
         if (noRecentSales && planned) {
             log.warn("Store «{}» has no sales on the last {} days of the month but has a plan for the new one, keeping it",
-                    store, DAYS_WITHOUT_SALES_TO_CLOSE);
+                    store, StoreClosureRule.DAYS_WITHOUT_SALES_TO_CLOSE);
         }
         if (location == null) {
             log.warn("Store «{}» is not in the database, its row is left as is", store);
@@ -112,7 +108,7 @@ public final class StoreStructureSync {
             editor.removeStore(store);
         } else if (noRecentSales && !planned) {
             log.warn("Removing store «{}» without sales on the last {} days of the month, its close_date is {}",
-                    store, DAYS_WITHOUT_SALES_TO_CLOSE, location.closeDate());
+                    store, StoreClosureRule.DAYS_WITHOUT_SALES_TO_CLOSE, location.closeDate());
             editor.removeStore(store);
         } else if (location.regionName() == null) {
             log.warn("Store «{}» has no region in the database, its row is left as is", store);
@@ -120,14 +116,6 @@ public final class StoreStructureSync {
             log.info("Moving store «{}» from region «{}» to «{}»", store, currentRegion, location.regionName());
             editor.moveStore(store, location.regionName());
         }
-    }
-
-    private static boolean noSalesOnLastDays(final StorePerformance sales, final LocalDate monthStart) {
-        return sales == null || lastDays(monthStart).stream().noneMatch(sales::soldOn);
-    }
-
-    private static List<LocalDate> lastDays(final LocalDate monthStart) {
-        return IntStream.rangeClosed(1, DAYS_WITHOUT_SALES_TO_CLOSE).mapToObj(monthStart::minusDays).toList();
     }
 
     private static String regionOf(final String store, final Map<String, StoreLocation> locations) {

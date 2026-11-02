@@ -1,6 +1,7 @@
 package com.etake.coresheetrenewal.config;
 
 import com.etake.coresheetrenewal.config.properties.CoreSheetRenewalProperties;
+import com.etake.coresheetrenewal.model.StoreLocation;
 import com.etake.coresheetrenewal.model.StorePerformance;
 import com.etake.coresheetrenewal.service.CoreSheetRenewalService;
 import com.etake.coresheetrenewal.service.StorePerformanceService;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.YearMonth;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -25,10 +27,12 @@ public class CoreSheetRenewalTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(@NonNull final StepContribution contribution, @NonNull final ChunkContext chunkContext) {
         final YearMonth newMonth = properties.newMonth();
-        final Map<String, StorePerformance> performance = storePerformanceService.load(newMonth.minusMonths(1));
+        final Map<String, StoreLocation> locations = storePerformanceService.loadLocations();
+        final Set<String> plannedStores = storePerformanceService.loadPlannedStores(newMonth);
+        final Map<String, StorePerformance> performance =
+                storePerformanceService.load(newMonth.minusMonths(1), locations, plannedStores);
 
-        coreSheetRenewalService.renew(newMonth, performance, storePerformanceService.loadLocations(),
-                storePerformanceService.loadPlannedStores(newMonth), storePerformanceService.loadRegionOrders());
+        coreSheetRenewalService.renew(newMonth, performance, locations, plannedStores, storePerformanceService.loadRegionOrders());
 
         return RepeatStatus.FINISHED;
     }
