@@ -6,6 +6,7 @@ import java.time.LocalTime;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TimeSlotParserTest {
@@ -51,8 +52,9 @@ class TimeSlotParserTest {
     }
 
     @Test
-    void overnightRangeIsSkipped() {
-        assertTrue(parser.parse("23:00-01:00").isEmpty());
+    void overnightRangeIsRejected() {
+        final IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> parser.parse("23:00-01:00"));
+        assertTrue(e.getMessage().contains("'23:00-01:00'"));
     }
 
     @Test
@@ -63,7 +65,15 @@ class TimeSlotParserTest {
     }
 
     @Test
-    void malformedRangeIsSkippedButOthersKept() {
-        assertEquals(Set.of(LocalTime.of(8, 0)), parser.parse("garbage;08:00-08:30"));
+    void oneMalformedRangeRejectsTheWholeCell() {
+        final IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> parser.parse("garbage;08:00-08:30"));
+        assertTrue(e.getMessage().contains("'garbage'"));
+    }
+
+    @Test
+    void everyInvalidRangeIsNamedInTheMessage() {
+        final IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> parser.parse("garbage;25:00-26:00"));
+        assertTrue(e.getMessage().contains("'garbage'"));
+        assertTrue(e.getMessage().contains("'25:00-26:00'"));
     }
 }

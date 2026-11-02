@@ -6,6 +6,7 @@ public final class Constants {
     public static final MathContext PRECISE_MATH_CONTEXT = MathContext.DECIMAL64;
 
     public static final String RESULT_SHEET = "Adjusted plans";
+    public static final String INVALID_ROWS_SHEET = "Помилки";
     public static final String TURNOVER_FORMAT = "0.00";
 
     /** Number of 30-minute slots in a day. */

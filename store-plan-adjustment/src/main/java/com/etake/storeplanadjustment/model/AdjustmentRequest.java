@@ -14,6 +14,7 @@ import java.util.Set;
  */
 public record AdjustmentRequest(
         String storeName,
+        String storeId,
         LocalDate date,
         Set<LocalTime> algorithmSlots,
         BigDecimal amount

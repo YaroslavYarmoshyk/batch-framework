@@ -40,14 +40,14 @@ unchanged (see *Output report* below).
    are normalized to 30-min slots and go through the formula above; rows with an amount are summed
    instead and skip estimation. Rows whose date falls outside `[START_DATE, END_DATE]` are dropped
    before anything else — a store with no adjustment inside this run's range is not part of the run
-   at all, and never appears in the report.
-2. Resolve store **names** → `locations.id`; unknown names are logged and skipped.
-3. Load **every** `daily_sales_plans` row within `[START_DATE, END_DATE]` for the remaining stores.
-4. Build intraday share profiles (`ShareProfileService`) for the disrupted (store, date) subset only.
-5. Read actual slot-level sales on the disrupted plan dates.
-6. Apply the formula to disrupted plans, pass every other plan through unchanged, and resolve
+   at all, and never appears in the report. Store **names** are resolved to `locations.id`. Any
+   invalid row in the range, including an unknown store, stops the job — see *Invalid rows*.
+2. Load **every** `daily_sales_plans` row within `[START_DATE, END_DATE]` for the stores with adjustments.
+3. Build intraday share profiles (`ShareProfileService`) for the disrupted (store, date) subset only.
+4. Read actual slot-level sales on the disrupted plan dates.
+5. Apply the formula to disrupted plans, pass every other plan through unchanged, and resolve
    category names for the report.
-7. Write the report workbook (`ReportExcelService`).
+6. Write the report workbook (`ReportExcelService`).
 
 ## Configuration
 
@@ -60,6 +60,7 @@ variables.
 | `DB_USERNAME`, `DB_PASSWORD` | env | SQL Server credentials. |
 | `system-configuration.resources.input` | yml | Path to `store_plan_adjustments.xlsx`. |
 | `system-configuration.resources.output` | yml | Path to the report (parent folder auto-created). |
+| `system-configuration.resources.invalid-rows` | yml | Path to the report of invalid input rows (parent folder auto-created). |
 | `system-configuration.input-columns` | yml | 0-based column indices: `STORE`, `DATE`, `TIME_RANGES`, `AMOUNT`. |
 
 Relative paths are resolved so they work regardless of the JVM's working directory: an absolute
@@ -86,6 +87,18 @@ for the same store+date are merged: rows with no `amount` union their time range
 `amount` have their amounts summed. A row still needs a valid `time_ranges` value even when it
 carries an `amount`.
 
+### Invalid rows
+
+A row dated inside `[START_DATE, END_DATE]` is invalid if its store is missing or not found among
+stores open as of `START_DATE`, its `time_ranges` is missing or has any invalid range, or its
+`amount` is not a number. A row with a missing or invalid date is invalid too, since its month can't
+be determined. Rows dated outside the range are not checked, and completely empty rows are ignored.
+
+If there are any, the job writes all of them to `invalid-adjustments.xlsx` — row number, the row's
+values, and the reason in Ukrainian — then fails with a non-zero exit code before querying plans or
+writing the adjusted plans report. Fix the rows and run again; a clean run deletes the old
+`invalid-adjustments.xlsx`.
+
 ## Output report
 
 Sheet `Adjusted plans`, one row per (store, category, date) in range for the stores that appear in
@@ -102,13 +115,12 @@ unchanged:
 - **No historical profile** (store had no sales on those weekdays) ⇒ `Σ share = 0`; only actual
   sales are added back (logged) — not logged when the window is entirely covered by an `amount`.
 - **Degenerate range** (`19:10-19:14`, collapses after rounding) ⇒ the single slot the start falls in.
-- **Overnight / inverted range** (`23:00-01:00`) ⇒ skipped with a warning.
-- **Unknown store name** ⇒ skipped. **Plan with no matching disruption** ⇒ reported unchanged (not skipped).
+- **Overnight / inverted range** (`23:00-01:00`) ⇒ invalid row, stops the job.
+- **Unknown store name** ⇒ invalid row, stops the job. **Plan with no matching disruption** ⇒ reported unchanged (not skipped).
 - **Null/zero plan turnover** ⇒ adjusted `= actual sales − amount`.
 - **`amount` present** ⇒ the row's window skips share/actual-sales estimation entirely; the
   store/date's total amount is split across its categories in proportion to plan turnover (equally
-  if that total is zero). An unparseable `amount` cell warns and falls back to the algorithm for
-  that row rather than dropping it.
+  if that total is zero). An unparseable `amount` cell is an invalid row and stops the job.
 
 ## Build & run
 
