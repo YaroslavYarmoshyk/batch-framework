@@ -117,9 +117,9 @@ public class StoreCategorySalesService {
                 ));
         List<ForecastStoreCategorySales> forecastSales = forecastService.getForecastStoreCategorySales(similarStoreCategorySales, plannedMonthLastYearDailySales);
         List<ForecastStoreCategorySales> newStoreForecastSales = newStoreForecastService.getNewStoreForecastSales(newStoreCandidates, planned);
-        List<ForecastStoreCategorySales> mergedForecastSalse = Stream.concat(forecastSales.stream(), newStoreForecastSales.stream()).toList();
+        List<ForecastStoreCategorySales> mergedForecastSales = Stream.concat(forecastSales.stream(), newStoreForecastSales.stream()).toList();
 
-        List<ForecastStoreCategorySales> finalForecastSales = enabledDistribution ? distributionService.getDistributedStoreCategorySales(mergedForecastSalse) : mergedForecastSalse;
+        List<ForecastStoreCategorySales> finalForecastSales = enabledDistribution ? distributionService.getDistributedStoreCategorySales(mergedForecastSales) : mergedForecastSales;
 
         List<DailySales> dailySales = finalForecastSales.stream()
                 .map(StoreCategorySalesService::mapToDailySales)
