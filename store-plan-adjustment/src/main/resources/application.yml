@@ -13,6 +13,7 @@ system-configuration:
   resources:
     input: src/main/resources/input/store_plan_adjustments.xlsx
     output: src/main/resources/output/adjusted-plans.xlsx
+    invalid-rows: src/main/resources/output/invalid-adjustments.xlsx
   input-columns:
     STORE: 0
     DATE: 1

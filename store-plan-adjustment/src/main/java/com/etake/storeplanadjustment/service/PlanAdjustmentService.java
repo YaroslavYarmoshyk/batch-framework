@@ -9,7 +9,6 @@ import com.etake.storeplanadjustment.model.ProfileKey;
 import com.etake.storeplanadjustment.model.StoreCategoryDate;
 import com.etake.storeplanadjustment.repository.CategoryRepository;
 import com.etake.storeplanadjustment.repository.DailyPlanRepository;
-import com.etake.storeplanadjustment.repository.LocationRepository;
 import com.etake.storeplanadjustment.repository.TransactionSlotRepository;
 import com.etake.storeplanadjustment.utils.SlotTurnovers;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +29,7 @@ import java.util.stream.Collectors;
 import static com.etake.storeplanadjustment.utils.Constants.PRECISE_MATH_CONTEXT;
 
 /**
- * Orchestrates the adjustment: resolve stores, pick the plans in range, build intraday profiles,
+ * Orchestrates the adjustment: pick the plans in range, build intraday profiles,
  * read the actual sales inside each disrupted window, and for disrupted (store, category, date)
  * combinations apply
  * <pre>adjusted = plan - (Σ share within range) * plan + (actual sales within range) - amount</pre>
@@ -46,7 +45,6 @@ import static com.etake.storeplanadjustment.utils.Constants.PRECISE_MATH_CONTEXT
 public class PlanAdjustmentService {
     private final SystemConfigurationProperties properties;
     private final AdjustmentFileService adjustmentFileService;
-    private final LocationRepository locationRepository;
     private final CategoryRepository categoryRepository;
     private final DailyPlanRepository dailyPlanRepository;
     private final TransactionSlotRepository transactionSlotRepository;
@@ -56,34 +54,18 @@ public class PlanAdjustmentService {
         final LocalDate fromDate = properties.dateRange().fromDate();
         final LocalDate toDate = properties.dateRange().toDate();
 
+        // Only adjustment rows inside this run's date range decide which stores are relevant.
         final List<AdjustmentRequest> adjustments = adjustmentFileService.readAdjustments();
         if (adjustments.isEmpty()) {
-            log.warn("No adjustments to apply");
-            return List.of();
-        }
-
-        // Only adjustment rows inside this run's date range decide which stores are relevant.
-        final List<AdjustmentRequest> inRangeAdjustments = withinRange(adjustments, fromDate, toDate);
-        if (inRangeAdjustments.isEmpty()) {
             log.warn("No adjustments fall within [{} .. {}]", fromDate, toDate);
             return List.of();
         }
-        if (inRangeAdjustments.size() < adjustments.size()) {
-            log.info("Ignoring {} adjustment(s) outside [{} .. {}]",
-                    adjustments.size() - inRangeAdjustments.size(), fromDate, toDate);
-        }
-
-        final Map<String, String> storeNameToId = resolveStores(inRangeAdjustments);
 
         // storeId -> date -> disruption; and storeId -> all disrupted dates (for profile exclusion).
-        final Map<String, Map<LocalDate, Disruption>> disruptionsByStore = indexDisruptions(inRangeAdjustments, storeNameToId);
+        final Map<String, Map<LocalDate, Disruption>> disruptionsByStore = indexDisruptions(adjustments);
         final Map<String, Set<LocalDate>> disruptedDatesByStore = disruptionsByStore.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().keySet()));
 
-        if (disruptionsByStore.isEmpty()) {
-            log.warn("No adjustments matched an open store");
-            return List.of();
-        }
         final Set<String> storeIds = disruptionsByStore.keySet();
 
         // Every plan in range for these stores is reported; only the disrupted subset feeds the formula.
@@ -115,7 +97,8 @@ public class PlanAdjustmentService {
         final Map<StoreDateKey, Long> categoryCounts = disruptedPlans.stream()
                 .collect(Collectors.groupingBy(p -> new StoreDateKey(p.storeId(), p.date()), Collectors.counting()));
 
-        final Map<String, String> storeIdToName = invert(storeNameToId);
+        final Map<String, String> storeIdToName = adjustments.stream()
+                .collect(Collectors.toMap(AdjustmentRequest::storeId, AdjustmentRequest::storeName, (a, _) -> a));
         final Map<String, String> categoryIdToName = resolveCategoryNames(plans);
 
         return plans.stream()
@@ -230,42 +213,10 @@ public class PlanAdjustmentService {
         return sum;
     }
 
-    /**
-     * Adjustment rows whose date falls inside {@code [fromDate, toDate]}. A store whose every row
-     * is filtered out here never gets resolved or queried, so it never appears in the report.
-     * Pure function - unit-tested directly.
-     */
-    static List<AdjustmentRequest> withinRange(final List<AdjustmentRequest> adjustments,
-                                               final LocalDate fromDate, final LocalDate toDate) {
-        return adjustments.stream()
-                .filter(a -> !a.date().isBefore(fromDate) && !a.date().isAfter(toDate))
-                .toList();
-    }
-
-    private Map<String, String> resolveStores(final List<AdjustmentRequest> adjustments) {
-        final LocalDate startDate = properties.dateRange().fromDate();
-        final Set<String> storeNames = adjustments.stream().map(AdjustmentRequest::storeName).collect(Collectors.toSet());
-        final Map<String, String> nameToId = new HashMap<>();
-        for (final NamedRef store : locationRepository.findStoresByName(storeNames, startDate)) {
-            if (nameToId.putIfAbsent(store.name(), store.id()) != null) {
-                log.warn("Store name '{}' resolves to multiple ids; keeping the first ({})", store.name(), nameToId.get(store.name()));
-            }
-        }
-        storeNames.stream()
-                .filter(name -> !nameToId.containsKey(name))
-                .forEach(name -> log.warn("Store '{}' not found among stores open as of {} - its adjustments are skipped", name, startDate));
-        return nameToId;
-    }
-
-    private static Map<String, Map<LocalDate, Disruption>> indexDisruptions(
-            final List<AdjustmentRequest> adjustments, final Map<String, String> storeNameToId) {
+    private static Map<String, Map<LocalDate, Disruption>> indexDisruptions(final List<AdjustmentRequest> adjustments) {
         final Map<String, Map<LocalDate, Disruption>> index = new HashMap<>();
         for (final AdjustmentRequest adjustment : adjustments) {
-            final String storeId = storeNameToId.get(adjustment.storeName());
-            if (storeId == null) {
-                continue;
-            }
-            index.computeIfAbsent(storeId, _ -> new HashMap<>())
+            index.computeIfAbsent(adjustment.storeId(), _ -> new HashMap<>())
                     .put(adjustment.date(), new Disruption(adjustment.algorithmSlots(), adjustment.amount()));
         }
         return index;
@@ -281,10 +232,6 @@ public class PlanAdjustmentService {
                                        final String storeId, final LocalDate date) {
         final Map<LocalDate, Disruption> byDate = disruptionsByStore.get(storeId);
         return byDate != null && byDate.containsKey(date);
-    }
-
-    private static Map<String, String> invert(final Map<String, String> map) {
-        return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey, (a, _) -> a));
     }
 
     private record Disruption(Set<LocalTime> algorithmSlots, BigDecimal amount) {

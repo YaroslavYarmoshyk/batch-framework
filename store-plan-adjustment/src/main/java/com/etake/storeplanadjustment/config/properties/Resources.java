@@ -4,10 +4,12 @@ package com.etake.storeplanadjustment.config.properties;
  * File locations for the run. Absolute paths are used as-is; relative paths are resolved by
  * {@link com.etake.storeplanadjustment.utils.ResourcePaths} against the working directory or, when
  * not found there, the module directory. {@code input} is the {@code store_plan_adjustments.xlsx}
- * to read; {@code output} is the report to write (its parent directory is created if missing).
+ * to read; {@code output} is the report to write (its parent directory is created if missing);
+ * {@code invalidRows} is the report of invalid input rows, written when they stop the run.
  */
 public record Resources(
         String input,
-        String output
+        String output,
+        String invalidRows
 ) {
 }

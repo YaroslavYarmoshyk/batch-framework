@@ -9,6 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 public class StorePlanAdjustmentApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(StorePlanAdjustmentApplication.class, args);
+        // Without this the process exits with 0 even when the job fails.
+        System.exit(SpringApplication.exit(SpringApplication.run(StorePlanAdjustmentApplication.class, args)));
     }
 }

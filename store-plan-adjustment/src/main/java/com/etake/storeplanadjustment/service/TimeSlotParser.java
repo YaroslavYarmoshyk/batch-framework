@@ -1,11 +1,12 @@
 package com.etake.storeplanadjustment.service;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import static com.etake.storeplanadjustment.utils.Constants.SLOT_MINUTES;
@@ -19,7 +20,6 @@ import static com.etake.storeplanadjustment.utils.Constants.SLOTS_PER_DAY;
  * to line up with the aggregated transaction data. A range covers every slot in
  * {@code [roundedStart, roundedEnd)}. Stateless and side-effect free, so it is unit-tested directly.
  */
-@Slf4j
 @Component
 public class TimeSlotParser {
     private static final String ALL_DAY = "all day";
@@ -28,6 +28,11 @@ public class TimeSlotParser {
     private static final int MINUTES_PER_DAY = SLOTS_PER_DAY * SLOT_MINUTES;
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("H:mm");
 
+    /**
+     * @return the covered slots; empty when the cell has no ranges at all
+     * @throws IllegalArgumentException when any range is invalid; the message names every invalid
+     *                                  range and why, in Ukrainian, for the invalid rows report
+     */
     public Set<LocalTime> parse(final String timeRanges) {
         if (timeRanges == null || timeRanges.isBlank()) {
             return Set.of();
@@ -38,19 +43,23 @@ public class TimeSlotParser {
         }
 
         final Set<LocalTime> slots = new LinkedHashSet<>();
+        final List<String> errors = new ArrayList<>();
         for (final String segment : trimmed.split(RANGE_SEPARATOR)) {
-            slots.addAll(parseRange(segment.trim()));
+            slots.addAll(parseRange(segment.trim(), errors));
+        }
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException(String.join("; ", errors));
         }
         return slots;
     }
 
-    private Set<LocalTime> parseRange(final String segment) {
+    private Set<LocalTime> parseRange(final String segment, final List<String> errors) {
         if (segment.isBlank()) {
             return Set.of();
         }
         final String[] bounds = segment.split(BOUND_SEPARATOR);
         if (bounds.length != 2) {
-            log.warn("Skipping malformed time range '{}' (expected HH:mm-HH:mm)", segment);
+            errors.add("Некоректний часовий проміжок '%s': очікується, наприклад, 19:00-20:00 або all day".formatted(segment));
             return Set.of();
         }
 
@@ -60,12 +69,12 @@ public class TimeSlotParser {
             start = LocalTime.parse(bounds[0].trim(), TIME_FORMAT);
             end = LocalTime.parse(bounds[1].trim(), TIME_FORMAT);
         } catch (final RuntimeException e) {
-            log.warn("Skipping unparseable time range '{}'", segment);
+            errors.add("Некоректний час у проміжку '%s': очікується, наприклад, 19:00-20:00".formatted(segment));
             return Set.of();
         }
 
         if (!end.isAfter(start)) {
-            log.warn("Skipping non-positive time range '{}' (end must be after start; overnight ranges are not supported)", segment);
+            errors.add("Некоректний часовий проміжок '%s': кінець має бути пізніше за початок (перехід через північ не підтримується)".formatted(segment));
             return Set.of();
         }
 

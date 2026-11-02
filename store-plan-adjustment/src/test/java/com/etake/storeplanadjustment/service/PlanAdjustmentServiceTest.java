@@ -1,15 +1,10 @@
 package com.etake.storeplanadjustment.service;
 
-import com.etake.storeplanadjustment.model.AdjustmentRequest;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlanAdjustmentServiceTest {
 
@@ -120,48 +115,5 @@ class PlanAdjustmentServiceTest {
         final BigDecimal allocated = PlanAdjustmentService.allocateAmount(
                 null, new BigDecimal("300"), new BigDecimal("1000"), 2);
         assertEquals(0, allocated.compareTo(BigDecimal.ZERO));
-    }
-
-    @Test
-    void withinRangeKeepsOnlyRowsInsideTheDateRange() {
-        final LocalDate fromDate = LocalDate.of(2026, 6, 1);
-        final LocalDate toDate = LocalDate.of(2026, 6, 30);
-        final AdjustmentRequest before = adjustment("Store A", LocalDate.of(2026, 5, 31));
-        final AdjustmentRequest inRange = adjustment("Store B", LocalDate.of(2026, 6, 15));
-        final AdjustmentRequest after = adjustment("Store C", LocalDate.of(2026, 7, 1));
-
-        final List<AdjustmentRequest> result =
-                PlanAdjustmentService.withinRange(List.of(before, inRange, after), fromDate, toDate);
-
-        assertEquals(List.of(inRange), result);
-    }
-
-    @Test
-    void withinRangeIncludesBoundaryDates() {
-        final LocalDate fromDate = LocalDate.of(2026, 6, 1);
-        final LocalDate toDate = LocalDate.of(2026, 6, 30);
-        final AdjustmentRequest onFromDate = adjustment("Store A", fromDate);
-        final AdjustmentRequest onToDate = adjustment("Store B", toDate);
-
-        final List<AdjustmentRequest> result =
-                PlanAdjustmentService.withinRange(List.of(onFromDate, onToDate), fromDate, toDate);
-
-        assertEquals(List.of(onFromDate, onToDate), result);
-    }
-
-    @Test
-    void withinRangeReturnsEmptyWhenNothingIsInRange() {
-        final LocalDate fromDate = LocalDate.of(2026, 6, 1);
-        final LocalDate toDate = LocalDate.of(2026, 6, 30);
-        final AdjustmentRequest before = adjustment("Store A", LocalDate.of(2026, 5, 1));
-
-        final List<AdjustmentRequest> result =
-                PlanAdjustmentService.withinRange(List.of(before), fromDate, toDate);
-
-        assertTrue(result.isEmpty());
-    }
-
-    private static AdjustmentRequest adjustment(final String storeName, final LocalDate date) {
-        return new AdjustmentRequest(storeName, date, Set.of(), null);
     }
 }
