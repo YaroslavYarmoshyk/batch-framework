@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: core-sheet-renewal
+
+system-configurations:
+  year: ${YEAR}
+  month: ${MONTH}
