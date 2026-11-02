@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: promotion-forecast
+  datasource:
+    url: ${DB_URL}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  threads:
+    virtual:
+      enabled: true
+
+system-configurations:
+  promotion:
+    type: CYCLIC
+    start-date: ${START_DATE}
+    end-date: ${END_DATE}
+    offset: 2y
+    historical-min-days-on-stock: 4
+  google-sheets:
+    enabled: ${GOOGLE_SHEETS_ENABLED:false}
+    service-account-key-path: ${GOOGLE_SHEETS_KEY_PATH:google/service-account-key.json}
+    spreadsheet-id: ${GOOGLE_SHEETS_SPREADSHEET_ID:}
+    sheet-name: result
+    layout:
+      enabled: ${GOOGLE_SHEETS_LAYOUT_ENABLED:true}
+      force: ${GOOGLE_SHEETS_LAYOUT_FORCE:false}

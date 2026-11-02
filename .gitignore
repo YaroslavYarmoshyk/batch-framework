@@ -1,10 +1,29 @@
+# Single ignore file for the whole multi-module build: add rules here, not in the modules.
+
 ### Gradle ###
 .gradle/
 **/build/
-!gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 HELP.md
+
+### Gradle wrapper — only the root one is used; Spring Initializr adds a copy to every new module ###
+/*/gradlew
+/*/gradlew.bat
+/*/gradle/wrapper/
+
+### Java crash logs ###
+hs_err_pid*
+replay_pid*
+
+### Logs ###
+*.log
+logs/
+
+### OS ###
+.DS_Store
+Thumbs.db
+Desktop.ini
 
 ### IntelliJ IDEA ###
 .idea/
@@ -42,8 +61,10 @@ bin/
 
 ### Local env files — contain secrets, not committed ###
 .env
+.env.*
+!.env.example
 
-### Google service-account credentials — cyclic-forecast keeps its key here ###
+### Google service-account credentials — promotion-forecast keeps its key here ###
 **/google/*
 
 ### Business data — inputs/outputs are local working files, not source ###

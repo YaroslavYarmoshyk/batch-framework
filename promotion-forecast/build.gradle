@@ -1,0 +1,17 @@
+dependencies {
+    implementation libs.google.api.client
+    implementation libs.google.api.services.sheets
+    implementation libs.google.auth.library.oauth2.http
+
+    constraints {
+        implementation(libs.guava) {
+            because 'google-api-client pulls Guava 33.1.0, whose AbstractFuture uses sun.misc.Unsafe (deprecation warnings on JDK 24+)'
+        }
+    }
+}
+
+bootJar {
+    enabled = true
+    archiveBaseName = 'promotion-forecast'
+    archiveVersion = '0.0.1-SNAPSHOT'
+}
