@@ -14,7 +14,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.etake.avgcheckplan.utils.Constants.PRECISE_MATH_CONTEXT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,6 +46,9 @@ class SeasonalCoefficientAvgCheckForecastServiceTest {
     @Mock
     private CheckPositionService checkPositionService;
 
+    @Mock
+    private AvgItemsPerCheckFileService avgItemsPerCheckFileService;
+
     private SeasonalCoefficientAvgCheckForecastService service;
 
     @BeforeEach
@@ -53,8 +59,10 @@ class SeasonalCoefficientAvgCheckForecastServiceTest {
                 new SeasonalCoefficient(new BigDecimal("0.05"), RECENT_YEAR_WEIGHT, GROWTH),
                 ForecastStrategy.SEASONAL_COEFFICIENT,
                 null,
+                null,
                 null);
-        service = new SeasonalCoefficientAvgCheckForecastService(checkPositionService, properties, new SimilarStoreResolver());
+        service = new SeasonalCoefficientAvgCheckForecastService(checkPositionService, properties, new SimilarStoreResolver(), avgItemsPerCheckFileService);
+        mockPlannedStores(STORE, "Новий магазин", "Магазин 2", "Магазин 3");
         mockPeriods(List.of(), List.of(), List.of(), List.of(), List.of());
     }
 
@@ -185,6 +193,48 @@ class SeasonalCoefficientAvgCheckForecastServiceTest {
         assertThat(position.k2()).isNull();
         assertThat(position.singleYearCoefficient()).isTrue();
         assertThat(position.appliedCoefficient()).isEqualByComparingTo("1.1");
+    }
+
+    @Test
+    void shouldSkipStoreMissingFromPlanFile() {
+        final String unplannedStore = "Магазин 2";
+        mockPlannedStores(STORE);
+        mockPeriods(
+                List.of(position(STORE, "100"), position(unplannedStore, "100")),
+                List.of(position(STORE, "110"), position(unplannedStore, "110")),
+                List.of(position(STORE, "100"), position(unplannedStore, "100")),
+                List.of(),
+                List.of());
+
+        assertThat(service.getForecastPositions())
+                .extracting(SeasonalPlanPosition::store)
+                .containsExactly(STORE);
+    }
+
+    @Test
+    void shouldNotBorrowCoefficientsFromStoreMissingFromPlanFile() {
+        final String newStore = "Новий магазин";
+        final String unplannedStore = "Магазин 2";
+        final String plannedStore = "Магазин 3";
+        mockPlannedStores(newStore, plannedStore);
+        mockPeriods(
+                List.of(position(newStore, "100"), position(unplannedStore, "105"), position(plannedStore, "500")),
+                List.of(position(unplannedStore, "110"), position(plannedStore, "600")),
+                List.of(position(unplannedStore, "100"), position(plannedStore, "500")),
+                List.of(),
+                List.of());
+
+        final SeasonalPlanPosition position = service.getForecastPositions().stream()
+                .filter(p -> p.store().equals(newStore))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(position.similarStore()).isEqualTo(plannedStore);
+    }
+
+    private void mockPlannedStores(final String... stores) {
+        lenient().when(avgItemsPerCheckFileService.readAvgItemsPerCheck())
+                .thenReturn(Arrays.stream(stores).collect(Collectors.toMap(Function.identity(), store -> BigDecimal.ONE)));
     }
 
     private void mockPeriods(

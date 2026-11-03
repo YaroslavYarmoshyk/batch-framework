@@ -60,6 +60,10 @@ public class AvgItemsPerCheckFileService {
                     + ResourcePaths.resolve(properties.input()).getAbsolutePath(), e);
         }
 
+        if (avgItemsPerCheckByStore.isEmpty()) {
+            throw new IllegalStateException("No stores found in avg items per check file: " + properties.input());
+        }
+
         log.info("Read {} store avg items per check value(s) from {}", avgItemsPerCheckByStore.size(), properties.input());
         return avgItemsPerCheckByStore;
     }

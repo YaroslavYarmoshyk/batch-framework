@@ -43,7 +43,7 @@ public class StoreChecksPlanUploadService {
                         log.warn("Skipping {}: no matching open location found", position.store());
                         return null;
                     }
-                    final BigDecimal avgItemsPerCheck = avgItemsPerCheckByStore.getOrDefault(position.store(), BigDecimal.ZERO);
+                    final BigDecimal avgItemsPerCheck = avgItemsPerCheckByStore.get(position.store());
                     return new StoreCheckPlanRecord(storeId, asOfDate.getYear(), asOfDate.getMonthValue(),
                             position.avgCheck(), avgItemsPerCheck);
                 })

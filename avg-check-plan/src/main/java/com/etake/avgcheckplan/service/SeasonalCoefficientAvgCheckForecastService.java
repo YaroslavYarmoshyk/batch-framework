@@ -5,6 +5,7 @@ import com.etake.avgcheckplan.config.properties.SeasonalCoefficient;
 import com.etake.avgcheckplan.model.AvgCheckPosition;
 import com.etake.avgcheckplan.model.SeasonalPlanPosition;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -13,31 +14,36 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import static com.etake.avgcheckplan.utils.Constants.PRECISE_MATH_CONTEXT;
 import static java.time.temporal.TemporalAdjusters.lastDayOfMonth;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SeasonalCoefficientAvgCheckForecastService implements AvgCheckForecastService<SeasonalPlanPosition> {
     private final CheckPositionService checkPositionService;
     private final SystemConfigurationProperties systemConfigurationProperties;
     private final SimilarStoreResolver similarStoreResolver;
+    private final AvgItemsPerCheckFileService avgItemsPerCheckFileService;
 
     @Override
     public List<SeasonalPlanPosition> getForecastPositions() {
         final LocalDate targetMonthStart = systemConfigurationProperties.dateRange().fromDate().withDayOfMonth(1);
         final LocalDate baseMonthStart = targetMonthStart.minusMonths(1);
+        final Set<String> plannedStores = avgItemsPerCheckFileService.readAvgItemsPerCheck().keySet();
 
-        final Map<String, AvgCheckPosition> baseCurrentYearPositions = fetchFullMonthPositions(baseMonthStart);
-        final Map<String, AvgCheckPosition> targetLastYearPositions = fetchFullMonthPositions(targetMonthStart.minusYears(1));
-        final Map<String, AvgCheckPosition> baseLastYearPositions = fetchFullMonthPositions(baseMonthStart.minusYears(1));
-        final Map<String, AvgCheckPosition> targetYearBeforeLastPositions = fetchFullMonthPositions(targetMonthStart.minusYears(2));
-        final Map<String, AvgCheckPosition> baseYearBeforeLastPositions = fetchFullMonthPositions(baseMonthStart.minusYears(2));
+        final Map<String, AvgCheckPosition> baseCurrentYearPositions = fetchFullMonthPositions(baseMonthStart, plannedStores);
+        final Map<String, AvgCheckPosition> targetLastYearPositions = fetchFullMonthPositions(targetMonthStart.minusYears(1), plannedStores);
+        final Map<String, AvgCheckPosition> baseLastYearPositions = fetchFullMonthPositions(baseMonthStart.minusYears(1), plannedStores);
+        final Map<String, AvgCheckPosition> targetYearBeforeLastPositions = fetchFullMonthPositions(targetMonthStart.minusYears(2), plannedStores);
+        final Map<String, AvgCheckPosition> baseYearBeforeLastPositions = fetchFullMonthPositions(baseMonthStart.minusYears(2), plannedStores);
 
-        return baseCurrentYearPositions.values().stream()
+        final List<SeasonalPlanPosition> positions = baseCurrentYearPositions.values().stream()
                 .map(basePosition -> buildPlanPosition(basePosition,
                         baseCurrentYearPositions,
                         targetLastYearPositions,
@@ -47,11 +53,19 @@ public class SeasonalCoefficientAvgCheckForecastService implements AvgCheckForec
                 .filter(Objects::nonNull)
                 .sorted(Comparator.comparing(SeasonalPlanPosition::region))
                 .toList();
+
+        final Set<String> storesWithPlan = positions.stream().map(SeasonalPlanPosition::store).collect(toSet());
+        plannedStores.stream()
+                .filter(store -> !storesWithPlan.contains(store))
+                .forEach(store -> log.warn("No plan calculated for store listed in the input file: {}", store));
+
+        return positions;
     }
 
-    private Map<String, AvgCheckPosition> fetchFullMonthPositions(final LocalDate monthStart) {
+    private Map<String, AvgCheckPosition> fetchFullMonthPositions(final LocalDate monthStart, final Set<String> plannedStores) {
         return checkPositionService.getAvgCheckPositionsInPeriod(monthStart, monthStart.with(lastDayOfMonth()))
                 .stream()
+                .filter(position -> plannedStores.contains(position.store()))
                 .collect(toMap(AvgCheckPosition::store, identity()));
     }
 
