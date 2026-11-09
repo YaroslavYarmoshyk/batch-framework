@@ -141,6 +141,22 @@ class PromotionSheetsLayoutServiceTest {
                 });
     }
 
+    /** The grid is grown to exactly header + data rows, so nothing may start below it ("exceeds grid limits"). */
+    @Test
+    void growsATooSmallGridAndKeepsEveryRangeInsideIt() {
+        givenSpreadsheet(null, 2);
+        givenTemplateDropdowns(12, 14, 15);
+
+        service(false).rebuild(rows);
+
+        final List<Request> structure = capturedBatches().getFirst();
+        assertThat(structure).extracting(Request::getAppendDimension).filteredOn(Objects::nonNull)
+                .extracting(append -> append.getSheetId(), append -> append.getDimension(), append -> append.getLength())
+                .contains(tuple(TOTAL_ID, "ROWS", 1 + rows.size() - 2));
+        assertThat(structure).extracting(Request::getSetDataValidation).filteredOn(Objects::nonNull)
+                .allSatisfy(validation -> assertThat(validation.getRange().getStartRowIndex()).isLessThan(1 + rows.size()));
+    }
+
     @Test
     void createsPlainDropdownsWhenTheTemplateHasNone() {
         givenSpreadsheet(null);
@@ -206,6 +222,10 @@ class PromotionSheetsLayoutServiceTest {
     }
 
     private void givenSpreadsheet(final String lastPromotion) {
+        givenSpreadsheet(lastPromotion, 5483);
+    }
+
+    private void givenSpreadsheet(final String lastPromotion, final int rowCount) {
         final List<DeveloperMetadata> metadata = lastPromotion == null ? null : List.of(new DeveloperMetadata()
                 .setMetadataId(77)
                 .setMetadataKey(PromotionSheetsLayoutService.PROMOTION_METADATA_KEY)
@@ -214,11 +234,11 @@ class PromotionSheetsLayoutServiceTest {
                 .setProperties(new SpreadsheetProperties().setLocale("ru_RU"))
                 .setDeveloperMetadata(metadata)
                 .setSheets(List.of(
-                        sheet(SOURCE_ID, "result"),
-                        sheet(TOTAL_ID, "Загальна акція"),
-                        sheet(FORECAST_ID, "Прогноз"),
-                        sheet(EXPORT_ID, "Заливка в 1С"),
-                        sheet(OLD_MANAGER_ID, "Скірка Оксана"))));
+                        sheet(SOURCE_ID, "result", rowCount),
+                        sheet(TOTAL_ID, "Загальна акція", rowCount),
+                        sheet(FORECAST_ID, "Прогноз", rowCount),
+                        sheet(EXPORT_ID, "Заливка в 1С", rowCount),
+                        sheet(OLD_MANAGER_ID, "Скірка Оксана", rowCount))));
     }
 
     private PromotionSheetsLayoutService service(final boolean force) {
@@ -238,9 +258,9 @@ class PromotionSheetsLayoutServiceTest {
         return new ValueRange().setValues(List.of(row));
     }
 
-    private static Sheet sheet(final int id, final String title) {
+    private static Sheet sheet(final int id, final String title, final int rowCount) {
         return new Sheet().setProperties(new SheetProperties().setSheetId(id).setTitle(title)
-                .setGridProperties(new GridProperties().setRowCount(5483).setColumnCount(20)));
+                .setGridProperties(new GridProperties().setRowCount(rowCount).setColumnCount(20)));
     }
 
     /** Row 2 of «Загальна акція»: «Так/Ні» dropdowns in the first two columns given, «100%/70%» in the third. */

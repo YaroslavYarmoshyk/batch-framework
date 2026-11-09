@@ -37,7 +37,9 @@ import com.google.api.services.sheets.v4.model.UpdateSheetPropertiesRequest;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Factory of Sheets API {@code batchUpdate} requests. Rows and columns are 0-based; a {@code null} end index means
@@ -157,6 +159,23 @@ public final class SheetRequests {
 
     public static Request appendColumns(final int sheetId, final int count) {
         return new Request().setAppendDimension(new AppendDimensionRequest().setSheetId(sheetId).setDimension("COLUMNS").setLength(count));
+    }
+
+    /**
+     * Appends the rows and columns a sheet lacks to hold {@code rows} × {@code columns} cells. Values writes never grow
+     * the grid themselves: a range beyond it fails with "exceeds grid limits". Never shrinks.
+     */
+    public static List<Request> growGrid(final int sheetId, final GridProperties grid, final int rows, final int columns) {
+        final int rowCount = Optional.ofNullable(grid).map(GridProperties::getRowCount).orElse(0);
+        final int columnCount = Optional.ofNullable(grid).map(GridProperties::getColumnCount).orElse(0);
+        final List<Request> requests = new ArrayList<>(2);
+        if (rowCount < rows) {
+            requests.add(appendRows(sheetId, rows - rowCount));
+        }
+        if (columnCount < columns) {
+            requests.add(appendColumns(sheetId, columns - columnCount));
+        }
+        return requests;
     }
 
     public static Request deleteColumns(final int sheetId, final int fromColumn, final int toColumn) {

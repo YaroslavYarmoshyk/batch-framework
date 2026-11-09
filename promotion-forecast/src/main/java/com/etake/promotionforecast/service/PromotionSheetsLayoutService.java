@@ -61,8 +61,7 @@ import static com.etake.promotionforecast.writer.googlesheets.PromotionSheetLayo
 import static com.etake.promotionforecast.writer.googlesheets.PromotionSheetLayout.WIDTH;
 import static com.etake.promotionforecast.writer.googlesheets.PromotionSheetLayout.YES_NO;
 import static com.etake.promotionforecast.writer.googlesheets.PromotionSheetLayout.letter;
-import static com.etake.googlesheets.SheetRequests.appendColumns;
-import static com.etake.googlesheets.SheetRequests.appendRows;
+import static com.etake.googlesheets.SheetRequests.growGrid;
 import static com.etake.googlesheets.SheetRequests.basicFilter;
 import static com.etake.googlesheets.SheetRequests.borders;
 import static com.etake.googlesheets.SheetRequests.clear;
@@ -144,7 +143,8 @@ public class PromotionSheetsLayoutService {
                 .map(Sheet::getProperties)
                 .collect(Collectors.toMap(SheetProperties::getTitle, Function.identity(), (a, b) -> a, LinkedHashMap::new));
         final SheetProperties totalSheet = requireSheet(sheets, TOTAL_SHEET);
-        final int forecastSheetId = requireSheet(sheets, FORECAST_SHEET).getSheetId();
+        final SheetProperties forecastSheet = requireSheet(sheets, FORECAST_SHEET);
+        final int forecastSheetId = forecastSheet.getSheetId();
         final List<String> oldManagerSheets = sheets.keySet().stream().filter(title -> !isPermanent(title)).toList();
         final Optional<DeveloperMetadata> promotionMetadata = Optional.ofNullable(spreadsheet.getDeveloperMetadata())
                 .orElse(List.of()).stream()
@@ -170,6 +170,8 @@ public class PromotionSheetsLayoutService {
         final List<Request> structure = new ArrayList<>();
         oldManagerSheets.forEach(title -> structure.add(deleteSheet(sheets.get(title).getSheetId())));
         structure.addAll(templateRequests(template, rows.size()));
+        structure.addAll(growGrid(forecastSheetId, forecastSheet.getGridProperties(),
+                FIRST_DATA_ROW + products.size(), ForecastColumn.values().length));
         structure.add(clear(openRange(forecastSheetId, FIRST_DATA_ROW, 0, null)));
         // Duplicated once the template is laid out and cleared, so manager sheets start from the header only.
         int insertIndex = sheets.size() - oldManagerSheets.size();
@@ -275,13 +277,9 @@ public class PromotionSheetsLayoutService {
      */
     private static List<Request> templateRequests(final Template template, final int rows) {
         final int sheetId = template.sheetId();
-        final List<Request> requests = new ArrayList<>();
-        if (template.rowCount() < FIRST_DATA_ROW + rows) {
-            requests.add(appendRows(sheetId, FIRST_DATA_ROW + rows - template.rowCount()));
-        }
-        if (template.columnCount() < WIDTH) {
-            requests.add(appendColumns(sheetId, WIDTH - template.columnCount()));
-        }
+        final List<Request> requests = new ArrayList<>(growGrid(sheetId,
+                new GridProperties().setRowCount(template.rowCount()).setColumnCount(template.columnCount()),
+                FIRST_DATA_ROW + rows, WIDTH));
 
         for (final TotalColumn column : YES_NO_COLUMNS) {
             requests.add(dropdown(sheetId, template.yesNoColumn(), column, rows, YES_NO));
@@ -291,9 +289,13 @@ public class PromotionSheetsLayoutService {
         final Set<Integer> dropdownColumns = new HashSet<>();
         YES_NO_COLUMNS.forEach(column -> dropdownColumns.add(column.index()));
         dropdownColumns.add(TotalColumn.FIRST_SHIPMENT.index());
+        // A range may not start past the grid, so dropdown columns are cleared below the data only if rows remain there.
+        final int gridRows = Math.max(template.rowCount(), FIRST_DATA_ROW + rows);
         for (int index = 0; index < WIDTH; index++) {
             final int fromRow = dropdownColumns.contains(index) ? FIRST_DATA_ROW + rows : FIRST_DATA_ROW;
-            requests.add(clearValidation(openRange(sheetId, fromRow, index, index + 1)));
+            if (fromRow < gridRows) {
+                requests.add(clearValidation(openRange(sheetId, fromRow, index, index + 1)));
+            }
         }
         if (template.columnCount() > WIDTH) {
             requests.add(deleteColumns(sheetId, WIDTH, template.columnCount()));
