@@ -17,9 +17,9 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import static com.etake.salesplan.constants.CalculationConstants.PRECISE_MATH_CONTEXT;
+import static com.etake.salesplan.utils.DailyShareUtils.flatDailyShares;
 import static java.util.stream.Collectors.toMap;
 
 @Slf4j
@@ -51,7 +51,7 @@ public class NewStoreForecastService {
 
         for (NewStoreCandidate candidate : candidates) {
             List<LocalDate> storeHolidays = holidays.getOrDefault(candidate.storeName(), List.of());
-            Map<LocalDate, Sales> dailyShares = buildFlatDailyShares(planned, storeHolidays);
+            Map<LocalDate, Sales> dailyShares = flatDailyShares(planned, storeHolidays);
             int plannedTradingDays = dailyShares.size();
 
             BigDecimal planTurnover;
@@ -106,27 +106,5 @@ public class NewStoreForecastService {
                 tradingDataBased, manualOverride, skipped);
 
         return result;
-    }
-
-    private static Map<LocalDate, Sales> buildFlatDailyShares(YearMonth planned, List<LocalDate> storeHolidays) {
-        List<LocalDate> tradingDates = new ArrayList<>();
-        for (int day = 1; day <= planned.lengthOfMonth(); day++) {
-            LocalDate date = LocalDate.of(planned.getYear(), planned.getMonthValue(), day);
-            if (!storeHolidays.contains(date)) {
-                tradingDates.add(date);
-            }
-        }
-        if (tradingDates.isEmpty()) {
-            for (int day = 1; day <= planned.lengthOfMonth(); day++) {
-                tradingDates.add(LocalDate.of(planned.getYear(), planned.getMonthValue(), day));
-            }
-        }
-
-        BigDecimal share = BigDecimal.ONE.divide(BigDecimal.valueOf(tradingDates.size()), PRECISE_MATH_CONTEXT);
-        Map<LocalDate, Sales> shares = new TreeMap<>();
-        for (LocalDate date : tradingDates) {
-            shares.put(date, new Sales(share, share));
-        }
-        return shares;
     }
 }

@@ -257,4 +257,40 @@ class ForecastServiceTest {
         BigDecimal turnoverSum = shares.values().stream().map(Sales::turnover).reduce(BigDecimal.ZERO, BigDecimal::add);
         assertThat(turnoverSum.doubleValue()).isCloseTo(1.0, Offset.offset(0.001));
     }
+
+    @Test
+    void calculateDailyShares_noLastYearSalesOnMatchingDates_splitsEquallyAcrossTradingDays() {
+        // Sales last year only from the 16th, while the store trades only on 1-8 of the planned month,
+        // which map to 2025-09-01..07 and 2025-09-09.
+        Map<LocalDate, Sales> dailySales = new TreeMap<>();
+        for (int day = 16; day <= 30; day++) {
+            dailySales.put(LocalDate.of(2025, 9, day), new Sales(new BigDecimal("100"), new BigDecimal("20")));
+        }
+        List<LocalDate> holidays = PLANNED.atDay(9).datesUntil(PLANNED.atEndOfMonth().plusDays(1)).toList();
+
+        Map<LocalDate, Sales> shares = forecastService.calculateDailyShares(dailySales, holidays);
+
+        assertFlatAcrossFirstEightDays(shares);
+    }
+
+    @Test
+    void calculateDailyShares_zeroTurnoverOnAllMatchingDates_splitsEquallyAcrossTradingDays() {
+        Map<LocalDate, Sales> dailySales = new TreeMap<>();
+        for (int day = 1; day <= 9; day++) {
+            dailySales.put(LocalDate.of(2025, 9, day), Sales.zero());
+        }
+        List<LocalDate> holidays = PLANNED.atDay(9).datesUntil(PLANNED.atEndOfMonth().plusDays(1)).toList();
+
+        Map<LocalDate, Sales> shares = forecastService.calculateDailyShares(dailySales, holidays);
+
+        assertFlatAcrossFirstEightDays(shares);
+    }
+
+    private static void assertFlatAcrossFirstEightDays(Map<LocalDate, Sales> shares) {
+        assertThat(shares.keySet()).containsExactlyElementsOf(PLANNED.atDay(1).datesUntil(PLANNED.atDay(9)).toList());
+        assertThat(shares.values()).allSatisfy(share -> {
+            assertThat(share.turnover().doubleValue()).isCloseTo(0.125, Offset.offset(0.0000001));
+            assertThat(share.margin().doubleValue()).isCloseTo(0.125, Offset.offset(0.0000001));
+        });
+    }
 }

@@ -19,6 +19,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.etake.salesplan.constants.CalculationConstants.PRECISE_MATH_CONTEXT;
+import static com.etake.salesplan.utils.DailyShareUtils.flatDailyShares;
 import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.toMap;
@@ -186,7 +187,16 @@ public class ForecastService {
                         (a, _) -> a,
                         TreeMap::new
                 ));
-        return finalizeShares(smoothShares(shares, 3));
+        Map<LocalDate, Sales> finalShares = finalizeShares(smoothShares(shares, 3));
+
+        // No usable last-year sales on the dates matching this month's trading days (e.g. a store closed
+        // for most of the month). Without shares, the plan assigned to this cell would produce no daily
+        // rows and silently drop out of the store and category totals.
+        return hasTurnoverShare(finalShares) ? finalShares : flatDailyShares(plannedYearMonth, currentHolidays);
+    }
+
+    private static boolean hasTurnoverShare(Map<LocalDate, Sales> shares) {
+        return shares.values().stream().anyMatch(share -> share.turnover().signum() != 0);
     }
 
     private LocalDate findCorrespondingPreviousYearDate(LocalDate plannedDate) {
